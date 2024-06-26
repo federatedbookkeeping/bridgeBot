@@ -1,0 +1,18 @@
+[
+    {
+        "type": "github",
+        "name": "upstream",
+        "tokens": {
+            "michielbdejong": "github_pat_11AA..."
+        },
+        "trackerUrl": "https://api.github.com/repos/federatedbookkeeping/github-dxos"
+    },
+    {
+        "type": "github",
+        "name": "me",
+        "tokens": {
+            "michielbdejong": "github_pat_11AA..."
+        },
+        "trackerUrl": "https://api.github.com/repos/michielbdejong/github-dxos"
+    }
+]

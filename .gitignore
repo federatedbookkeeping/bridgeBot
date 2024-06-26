@@ -1,0 +1,9 @@
+// Build
+dist
+node_modules
+
+// Configuration
+config.json
+
+// JSON dumps from DataStore, bridges and clients
+data

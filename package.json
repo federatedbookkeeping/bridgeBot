@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "start": "node dist/main.js",
+    "build": "tsc src/* --outDir dist/"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  }
+}
