@@ -9,9 +9,9 @@ const DEFAULT_HTTP_HEADERS = {
   "X-GitHub-Api-Version": "2022-11-28",
 };
 
-const BASE_API_URL = `https://api.github.com/repos/`;
-const REL_API_PATH_ISSUES = `/issues`;
-const REL_API_PATH_COMMENTS = `/comments`;
+const BASE_API_URL = `https://api.github.com/repos`;
+const REL_API_PATH_ISSUES = `issues`;
+const REL_API_PATH_COMMENTS = `comments`;
 
 export type GitHubClientSpec = {
   // from generic ClientSpec
@@ -57,34 +57,35 @@ export class GitHubClient extends Client {
     // console.log(fetchResult);
     return fetchResult.json();
   }
-  getApiUrl(type: string): string {
+  getApiUrl(type: string, filter?: { issue: string }): string {
     switch(type) {
-      case 'issue': return BASE_API_URL + this.spec.repo + REL_API_PATH_ISSUES;
-      case 'comment': return BASE_API_URL + this.spec.repo + REL_API_PATH_COMMENTS;
+      case 'issue': return `${BASE_API_URL}/${this.spec.repo}/${REL_API_PATH_ISSUES}`;
+      case 'comment': return `${BASE_API_URL}/${this.spec.repo}/${REL_API_PATH_ISSUES}/${filter!.issue}/${REL_API_PATH_COMMENTS}`;
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  translate(ghItem: { id: number, title: string, body: string }, type: string) {
+  translate(item: object, type: string): Item {
+    console.log('translating', item, type);
+    const ghItem = item as { number: number, title: string, body: string };
     switch(type) {
       case 'issue':
         return {
           type: 'issue',
-          identifier: ghItem.id,
+          identifier: ghItem.number.toString(),
           deleted: false,
           fields: {
             title: ghItem.title,
             body: ghItem.body,
             completed: false
           }
-        };
+        } as Item;
       break;
     }
+    throw new Error('cannot translate');
   }
-  async getItemsOverNetwork(type: string): Promise<Item[]> {
-    const rawData = await this.apiCall({ url: this.getApiUrl(type), method: "GET", user: this.spec.defaultUser });
-    return rawData.map(ghItem => {
-      return this.translate(ghItem, type);
-    });
+  async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> {
+    console.log('GitHubClient#getItemsOverNetwork', type, filter);
+    return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });
   }
 
   // async remoteCreate(user: string, url: string, data: object): Promise<string> {

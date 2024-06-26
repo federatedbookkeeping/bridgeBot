@@ -6,6 +6,7 @@ export async function sync(client: Client, dataStore: DataStore) {
   const issues: Issue[] = await client.getItems('issue');
   let comments: Comment[] = [];
   const commentFetches = issues.map(async (issue) => {
+    console.log('Getting comments for issue', issue);
     const issueComments = await client.getItems('comment', { issue: issue.identifier });
     comments = comments.concat(issueComments);
   });

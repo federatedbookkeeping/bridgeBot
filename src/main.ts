@@ -24,14 +24,14 @@ async function getClients() {
 
 async function run(): Promise<void> {
   const dataStore = new DataStore();
-  await dataStore.load('./data.json');
+  await dataStore.load('./data/store.json');
   const replicas = await getClients();
   // await sync(replicas[0]);
   await Promise.all(replicas.map(client => sync(client, dataStore)));
   console.log(dataStore.items);
   // leave time for events to propagate to all replicas
   await new Promise(r => setTimeout(r, 1000));
-  await dataStore.save('./data.json');
+  await dataStore.save('./data/store.json');
 }
 
 // ...
