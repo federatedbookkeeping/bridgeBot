@@ -1,7 +1,6 @@
 import { Item } from "./model/Item";
 
 const fsPromises = require("fs/promises");
-const EventEmitter = require('node:events');
 
 export type OperationType = 'upsert' | 'merge' | 'fork';
 export type ObjectType = 'issue' | 'worked' | 'comment';
@@ -12,7 +11,7 @@ export type Operation = {
   origin?: string,
 };
 
-export class DataStore extends EventEmitter {
+export class DataStore {
   items: Item[] = [];
   // match(identifiers: string[], cb: (i: number, id: string) => void) {
   //   for (let i = 0; i < this.items.length; i++) {

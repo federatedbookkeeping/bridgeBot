@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "node dist/main.js",
-    "build": "tsc src/* --outDir dist/"
+    "build": "tsc src/*.ts src/*/*.ts --outDir dist/"
   },
   "dependencies": {
   },

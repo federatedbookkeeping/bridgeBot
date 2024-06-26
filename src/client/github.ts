@@ -1,4 +1,3 @@
-const fsPromises = require("fs/promises");
 import { DataStore, Operation } from "../data";
 import { Item } from "../model/Item";
 import { Issue } from "../model/issue";
@@ -10,15 +9,20 @@ const DEFAULT_HTTP_HEADERS = {
   "X-GitHub-Api-Version": "2022-11-28",
 };
 
+const BASE_API_URL = `https://api.github.com/repos/`;
 const REL_API_PATH_ISSUES = `/issues`;
 const REL_API_PATH_COMMENTS = `/comments`;
 
-export class GitHubClientSpec extends ClientSpec {
+export type GitHubClientSpec = {
+  // from generic ClientSpec
+  name: string;
+  type: string;
+  //specific for GitHub
   tokens: {
     [user: string]: string;
   };
   defaultUser: string;
-  trackerUrl: string;
+  repo: string;
 };
 
 export class GitHubClient extends Client {
@@ -55,7 +59,8 @@ export class GitHubClient extends Client {
   }
   getApiUrl(type: string): string {
     switch(type) {
-      case 'issue': return this.spec.trackerUrl + REL_API_PATH_ISSUES;
+      case 'issue': return BASE_API_URL + this.spec.repo + REL_API_PATH_ISSUES;
+      case 'comment': return BASE_API_URL + this.spec.repo + REL_API_PATH_COMMENTS;
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
