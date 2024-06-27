@@ -13,6 +13,9 @@ export type Operation = {
 
 export class DataStore {
   items: Item[] = [];
+  add(item) {
+    this.items.push(item);
+  }
   // match(identifiers: string[], cb: (i: number, id: string) => void) {
   //   for (let i = 0; i < this.items.length; i++) {
   //     for (let j = 0; j < identifiers.length; j++) {

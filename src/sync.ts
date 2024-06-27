@@ -11,8 +11,10 @@ export async function sync(client: Client, dataStore: DataStore) {
     comments = comments.concat(issueComments);
   });
   await Promise.all(commentFetches);
+
   const issueUpserts = issues.map(async (issue) => {
-    // console.log('upserting doc', doc);
+    console.log('upserting issue', issue);
+    dataStore.add(issue);
     // dataStore.applyOperation({
     //   origin: client.spec.name,
     //   operationType: "upsert",
@@ -22,12 +24,13 @@ export async function sync(client: Client, dataStore: DataStore) {
   await Promise.all(issueUpserts);
   console.log(`Bridge for client ${client.spec.name} is done syncing issues`);
   const commentUpserts = comments.map(async (comment) => {
-    // console.log('upserting comment', comment);
-  //   dataStore.applyOperation({
-  //     origin: client.spec.name,
-  //     operationType: "upsert",
-  //     fields: comment,
-  //   });
+    console.log('upserting comment', comment);
+    dataStore.add(comment);
+    // dataStore.applyOperation({
+    //   origin: client.spec.name,
+    //   operationType: "upsert",
+    //   fields: comment,
+    // });
   });
   await Promise.all(commentUpserts);
   console.log(`Bridge for client ${client.spec.name} is done syncing comments`);

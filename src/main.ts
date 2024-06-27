@@ -28,9 +28,9 @@ async function getClients() {
 async function run(): Promise<void> {
   const dataStore = new DataStore();
   await dataStore.load('./data/store.json');
-  const replicas = await getClients();
+  const clients = await getClients();
   // await sync(replicas[0]);
-  await Promise.all(replicas.map(client => sync(client, dataStore)));
+  await Promise.all(clients.map(client => sync(client, dataStore)));
   console.log(dataStore.items);
   // leave time for events to propagate to all replicas
   await new Promise(r => setTimeout(r, 1000));
