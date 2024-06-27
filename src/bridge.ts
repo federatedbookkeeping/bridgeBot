@@ -24,6 +24,7 @@ class LriMap {
   toUniversal(local: string) {
     if (typeof this.map.toUniversal[local] === 'undefined') {
       const universal = uuid();
+      console.log(`Have not seen local identifier "${local} before, assigning "${universal}`);
       this.map.toUniversal[local] = universal;
       this.map.toLocal[universal] = local;
     }

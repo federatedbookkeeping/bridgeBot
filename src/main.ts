@@ -28,7 +28,7 @@ async function run(): Promise<void> {
   await dataStore.load();
   
   await Promise.all(bridges.map(bridge => bridge.sync()));
-  console.log(dataStore.items);
+  // console.log(dataStore.items);
   await dataStore.save();
 }
 
