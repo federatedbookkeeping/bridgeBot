@@ -61,7 +61,7 @@ export class TikiClient extends Client {
     throw new Error(`No API URL found for data type ${type}`);
   }
   translateItem(item: object, type: string): Item {
-    console.log('translating', item, type);
+    // console.log('translating', item, type);
     switch(type) {
       case 'issue':
         const ttItem = item as {
@@ -115,89 +115,60 @@ export class TikiClient extends Client {
 
 
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> {
-    console.log('TikiClient#getItemsOverNetwork', type, filter);
+    // console.log('TikiClient#getItemsOverNetwork', type, filter);
     return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });
   }
 
-  // async remoteCreate(user: string, url: string, data: object): Promise<string> {
-  //   console.log('remoteCreate', user, url);
-  //   const args = {
-  //     user,
-  //     url,
-  //     method: "POST",
-  //     body: JSON.stringify(data, null, 2),
-  //   };
-  //   const response = (await this.apiCall(args)) as { id: number };
-  //   // console.log(response);
-  //   return response.id.toString();
-  // }
-
-  // async addIssue(user: string, issue: TikiIssueAdd): Promise<string> {
-  //   return this.remoteCreate(user, issue.repository_url + REL_API_PATH_ISSUES, issue);
-  // }
-  // async addComment(user: string, comment: TikiCommentAdd): Promise<string> {
-  //   return this.remoteCreate(user, comment.issue_url + REL_API_PATH_COMMENTS, comment);
-  // }
-
-  // async addItem(user: string, fields: object): Promise<string> {
-  //   if (item.type === "issue") {
-  //     return this.addIssue(user, {
-  //       repository_url: this.spec.trackerUrl,
-  //       title: (item as Issue).title,
-  //       body: (item as Issue).body,
-  //     });
-  //   }
-  //   if (item.type === "comment") {
-  //     const issueUrlCandidates = this.dataStore.issueIdToIssueIds(
-  //       (item as Comment).issueId
-  //     );
-  //     console.log(`found issue url candidate for ${(item as Comment).issueId}`, issueUrlCandidates);
-  //     for (let i = 0; i < issueUrlCandidates.length; i++) {
-  //       if (issueUrlCandidates[i].startsWith(this.apiUrlIdentifierPrefix)) {
-  //         return this.addComment(user, {
-  //           issue_url: issueUrlCandidates[i].substring(API_URL_ID_SCHEME.length),
-  //           body: (item as Comment).body,
-  //         });
-  //       }
-  //     }
-  //     throw new Error('cannot post comment if issue doesnt exist');
-  //   }
-  //   throw new Error(`Unknown item type ${item.type}`);
-  // }
-
-  // async upsert(user: string, item: Item): Promise<string | undefined> {
-  //   let ghApiUrl: string | undefined = item.identifiers.find((x: string) =>
-  //     x.startsWith(this.apiUrlIdentifierPrefix)
-  //   );
-  //   console.log('no identifier found with prefix', this.apiUrlIdentifierPrefix);
-  //   if (typeof ghApiUrl === "undefined") {
-  //     const itemUrl = await this.addItem(user, item);
-  //     return `${API_URL_ID_SCHEME}:${itemUrl}`;
-  //   }
-  // }
-
-  // async handleOperation(operation: Operation) {
-  //   switch (operation.operationType) {
-  //     case "upsert":
-  //       const item = operation.fields as Item;
-  //       const additionalIdentifier: string | undefined = await this.upsert(this.spec.defaultUser, item);
-  //       console.log('additional identifier came back from upsert', additionalIdentifier);
-  //       if (typeof additionalIdentifier === 'string') {
-  //         this.dataStore.addIdentifier(item.identifiers[0], additionalIdentifier);
-  //       }
-  //       break;
-  //     case "merge":
-  //       // not implemented yet
-  //       break;
-  //     case "fork":
-  //       // not implemented yet
-  //       break;
-  //     default:
-  //       console.error("unknown operation type", operation);
-  //   }
-  // }
-
-  async createItem(type: string, fields: object): Promise<string> {
+  async createItem(type: string, fields: object, references: object): Promise<string> {
+    console.log('createItem', type, fields, references);
+    switch (type) {
+      case 'issue': {
+        const issueFields = fields as { title: string, body: string };
+        const response = await this.apiCall({
+          url: this.getApiUrl('issue', undefined),
+          method: 'POST',
+          user: this.spec.defaultUser,
+          body: JSON.stringify({
+            status: 'o',
+            ins_27: issueFields.title,          
+            syntax: 'tiki',
+            ins_28: 3,
+            ins_31: issueFields.body,
+            'ins33[]': this.spec.defaultUser,
+            trackerId: this.spec.trackerId,
+          })
+        });
+        console.log(response);
+        return 'fake-id';
+      }
+      case 'comment': {
+        const commentFields = fields as { body: string };
+        const commentReferences = references as { issue: string };
+        const response = await this.apiCall({
+          url: this.getApiUrl('issue', undefined),
+          method: 'POST',
+          user: this.spec.defaultUser,
+          body: JSON.stringify({
+            type: 'trackeritem',
+            objectId: commentReferences.issue,
+            post: 1,
+            syntax: 'tiki',
+            data: commentFields.body
+          })
+        });
+        console.log(response);
+      //   {
+      //     "threadId": "2",
+      //     "parentId": 0,
+      //     "type": "trackeritem",
+      //     "objectId": "686",
+      //     "feedback": []
+      // }
+        return 'fake-id';
+      }
+      default:
+        throw new Error(`TikiClient cannot create items of type ${type}`);
+    }
     // const itemUrl = await this.addItem(this.spec.defaultUser, fields);
     //   return `${API_URL_ID_SCHEME}:${itemUrl}`;
     return '';

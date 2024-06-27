@@ -24,7 +24,7 @@ export class Client {
     }
   }
   async getItems(type: string, filter?: { issue: string }): Promise<any> {
-    console.log('Client#getItems', type, filter);
+    // console.log('Client#getItems', type, filter);
     let itemsResponse: Item[] = [];
     const filename = this.getFilename(type, filter);
     try {
@@ -52,7 +52,10 @@ export class Client {
   }
 
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> { return []; }
-  async createItem(type: string, fields: object, references: object): Promise<string> { return ''; }
+  async createItem(type: string, fields: object, references: object): Promise<string> {
+    console.log('createItem', type, fields, references);
+    return 'fake-id';
+  }
   async updateItem(type: string, id: string, fields: object, references: object): Promise<void> {}
   async deleteItem(type: string, id: string): Promise<void> {}
 }
