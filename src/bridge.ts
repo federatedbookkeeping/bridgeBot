@@ -24,11 +24,11 @@ class LriMap {
   toUniversal(local: string) {
     if (typeof this.toUniversal[local] === 'undefined') {
       const universal = uuid();
-      this.toUniversal[local] = universal;
-      this.toLocal[universal] = local;
+      this.map.toUniversal[local] = universal;
+      this.map.toLocal[universal] = local;
     }
 
-    return this.map.toLocal[local];
+    return this.map.toUniversal[local];
   }
   async load() {
     try {
