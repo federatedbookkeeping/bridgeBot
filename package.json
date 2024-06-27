@@ -2,11 +2,10 @@
   "scripts": {
     "start": "node ./server.js",
     "sync": "node dist/main.js",
-    "build": "tsc src/*.ts src/*/*.ts --outDir dist/"
-  },
-  "dependencies": {
+    "build": "tsc src/*.ts src/*/*.ts --outDir dist/ --lib ES2015"
   },
   "devDependencies": {
+    "@types/node": "^20.14.9",
     "typescript": "^5.5.2"
   }
 }

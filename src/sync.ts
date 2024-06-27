@@ -1,6 +1,7 @@
 import { Client } from "./client/client";
 import { DataStore } from "./data";
 import { Issue } from "./model/issue";
+import { Comment } from "./model/comment";
 
 export async function sync(client: Client, dataStore: DataStore) {
   const issues: Issue[] = await client.getItems('issue');
