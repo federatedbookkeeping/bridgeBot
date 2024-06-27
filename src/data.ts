@@ -12,7 +12,11 @@ export type Operation = {
 };
 
 export class DataStore {
+  filename: string
   items: Item[] = [];
+  constructor(filename: string) {
+    this.filename = filename;
+  }
   add(item) {
     this.items.push(item);
   }
@@ -80,18 +84,18 @@ export class DataStore {
   //   throw new Error(`No item found with existing identifier ${existingIdentifier}, cannot add ${additionalIdentifier}`);
   // }
 
-  async load(filename: string) {
+  async load() {
     try {
-      const buff = await fsPromises.readFile(filename);
+      const buff = await fsPromises.readFile(this.filename);
       this.items = JSON.parse(buff.toString());
-      console.log(`Loaded ${filename}`);
+      console.log(`Loaded ${this.filename}`);
     } catch {
-      console.log(`Failed to load ${filename}`);
+      console.log(`Failed to load ${this.filename}`);
     }
   }
-  async save(filename: string) {
-    await fsPromises.writeFile(filename, JSON.stringify(this.items, null, 2) + "\n");
-    console.log(`Saved ${filename}`);
+  async save() {
+    await fsPromises.writeFile(this.filename, JSON.stringify(this.items, null, 2) + "\n");
+    console.log(`Saved ${this.filename}`);
   }
   // issueIdToIssueIds(issueId: string): string[] {
   //   for (let i = 0; i < this.items.length; i++) {

@@ -79,13 +79,16 @@ export class GitHubClient extends Client {
         } as Item;
       break;
       case 'comment':
-        const ghComment = item as { id: number, body: string };
+        const ghComment = item as { id: number, body: string, issue_url: string };
         return {
           type: 'comment',
           identifier: ghComment.id.toString(),
           deleted: false,
           fields: {
             body: ghComment.body
+          },
+          references: {
+            issue: ghComment.issue_url.split('/').slice(-1)
           }
         } as Item;
       break;

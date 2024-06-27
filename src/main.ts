@@ -23,13 +23,13 @@ async function buildBridges(configFile: string, dataStore: DataStore): Promise<B
 }
 
 async function run(): Promise<void> {
-  const dataStore = new DataStore();
+  const dataStore = new DataStore('./data/store.json');
   const bridges = await buildBridges(CONFIG_FILE, dataStore);
-  await dataStore.load('./data/store.json');
+  await dataStore.load();
   
   await Promise.all(bridges.map(bridge => bridge.sync()));
   console.log(dataStore.items);
-  await dataStore.save('./data/store.json');
+  await dataStore.save();
 }
 
 // ...

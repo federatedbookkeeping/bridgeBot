@@ -84,13 +84,16 @@ export class TikiClient extends Client {
         } as Item;
       break;
       case 'comment':
-        const ttComment = item as { object: number, objectType: string, userName: string, data: string, message_id: string };
+        const ttComment = item as { object: string, objectType: string, userName: string, data: string, message_id: string };
         return {
           type: 'comment',
           identifier: ttComment.message_id,
           deleted: false,
           fields: {
             body: ttComment.data
+          },
+          references: {
+            issue: ttComment.object
           }
         } as Item;
       break;
