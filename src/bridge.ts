@@ -22,7 +22,7 @@ class LriMap {
     return this.map.toLocal[universal];
   }
   toUniversal(local: string) {
-    if (typeof this.toUniversal[local] === 'undefined') {
+    if (typeof this.map.toUniversal[local] === 'undefined') {
       const universal = uuid();
       this.map.toUniversal[local] = universal;
       this.map.toLocal[universal] = local;
@@ -86,7 +86,7 @@ export class Bridge {
     });
     await Promise.all(commentFetches);
 
-    const issueUpserts = issues.map(async (issue) => {
+    issues.map(async (issue) => {
       const universalIssue = {
         ... issue,
         identifier: this.lriMap.issue.toUniversal(issue.identifier)
@@ -94,9 +94,9 @@ export class Bridge {
       console.log("upserting issue", issue, universalIssue);
       this.dataStore.add(universalIssue);
     });
-    await Promise.all(issueUpserts);
-    console.log(`Bridge for client ${this.client.spec.name} is done syncing issues`);
-    const commentUpserts = comments.map(async (comment) => {
+    console.log('done inserting issues');
+    console.log(`Bridge for client ${this.client.spec.name} is done storing fetched issues, now storing fetched comments`);
+    comments.map(async (comment) => {
       const universalComment = {
         ... comment,
         identifier: this.lriMap.comment.toUniversal(comment.identifier),
@@ -107,10 +107,12 @@ export class Bridge {
       console.log("upserting comment", comment, universalComment);
       this.dataStore.add(universalComment);
     });
-    await Promise.all(commentUpserts);
+    console.log(
+      `Bridge for client ${this.client.spec.name} is done storing comments, now saying LRI maps to disk`
+    );
     await this.saveAllLriMaps();
     console.log(
-      `Bridge for client ${this.client.spec.name} is done syncing comments`
+      `Bridge for client ${this.client.spec.name} is done syncing`
     );
   }
 }
