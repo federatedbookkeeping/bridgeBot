@@ -15,7 +15,7 @@ createServer((req, res) => {
     console.log(body);
   });
 
-  res.end('https://taskifier.heroku.com works');
+  res.end('{ "happy": true }');
 }).listen(port);
 console.log('listening on port', port);
 
