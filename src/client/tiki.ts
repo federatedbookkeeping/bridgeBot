@@ -6,8 +6,8 @@ const DEFAULT_HTTP_HEADERS = {
   Accept: "application/json"
 };
 
-const BASE_API_URL = `https://`;
-const REL_API_PATH_TRACKERS = `api/trackers`;
+const REL_API_PATH_TRACKERS = ``;
+const REL_API_PATH_COMMENTS = ``;
 
 export type TikiClientSpec = {
   // from generic ClientSpec
@@ -55,30 +55,62 @@ export class TikiClient extends Client {
   }
   getApiUrl(type: string, filter?: { issue: string }): string {
     switch(type) {
-      case 'issue': return `${BASE_API_URL}/${this.spec.server}/${REL_API_PATH_TRACKERS}/${this.spec.trackerId}`;
-      // case 'comment': return `${BASE_API_URL}/${this.spec.repo}/${REL_API_PATH_ISSUES}/${filter!.issue}/${REL_API_PATH_COMMENTS}`;
+      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}`;
+      case 'comment': return `https://${this.spec.server}/api/comments?type=trackeritem&objectId=${filter!.issue}`;
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  translate(item: object, type: string): Item {
+  translateItem(item: object, type: string): Item {
     console.log('translating', item, type);
-    const ghItem = item as { number: number, title: string, body: string };
     switch(type) {
       case 'issue':
+        const ttItem = item as {
+          itemId: number,
+          status: string,
+          fields: {
+            taskSummary: string,
+            taskDescription: string
+          }
+        };
         return {
           type: 'issue',
-          identifier: ghItem.number.toString(),
+          identifier: ttItem.itemId.toString(),
           deleted: false,
           fields: {
-            title: ghItem.title,
-            body: ghItem.body,
-            completed: false
+            title: ttItem.fields.taskSummary,
+            body: ttItem.fields.taskDescription,
+            completed: (ttItem.status === 'c')
+          }
+        } as Item;
+      break;
+      case 'comment':
+        const ttComment = item as { object: number, objectType: string, userName: string, data: string, message_id: string };
+        return {
+          type: 'comment',
+          identifier: ttComment.message_id,
+          deleted: false,
+          fields: {
+            body: ttComment.data
           }
         } as Item;
       break;
     }
     throw new Error('cannot translate');
   }
+  translateItemsResponse(itemsResponse: object, type: string): Item[] {
+    switch (type) {
+      case 'issue':
+        const issuesResponse = itemsResponse as { result: object[] };
+        return issuesResponse.result.map(item => this.translateItem(item, type));
+      case 'comment':
+        const commentsResponse = itemsResponse as { comments: object[] };
+        return commentsResponse.comments.map(item => this.translateItem(item, type));
+      default:
+        throw new Error(`Cannot translate items response of type ${type}`);
+      }
+  }
+
+
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> {
     console.log('TikiClient#getItemsOverNetwork', type, filter);
     return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });

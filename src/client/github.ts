@@ -62,7 +62,7 @@ export class GitHubClient extends Client {
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  translate(item: object, type: string): Item {
+  translateItem(item: object, type: string): Item {
     console.log('translating', item, type);
     switch(type) {
       case 'issue':
@@ -85,14 +85,17 @@ export class GitHubClient extends Client {
           identifier: ghComment.id.toString(),
           deleted: false,
           fields: {
-            body: ghComment.body,
-            completed: false
+            body: ghComment.body
           }
         } as Item;
       break;
     }
     throw new Error('cannot translate');
   }
+  translateItemsResponse(itemsResponse: object[], type: string): Item[] {
+    return itemsResponse.map(item => this.translateItem(item, type));
+  }
+
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> {
     console.log('GitHubClient#getItemsOverNetwork', type, filter);
     return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });

@@ -25,15 +25,15 @@ export class Client {
   }
   async getItems(type: string, filter?: { issue: string }): Promise<any> {
     console.log('Client#getItems', type, filter);
-    let items: Item[] = [];
+    let itemsResponse: Item[] = [];
     const filename = this.getFilename(type, filter);
     try {
       const buff = await fsPromises.readFile(filename);
-      items = JSON.parse(buff.toString());
+      itemsResponse = JSON.parse(buff.toString());
       console.log(`Loaded ${filename}`);
     } catch {
       console.log(`Failed to load ${filename}, fetching over network`);
-      items = await this.getItemsOverNetwork(type, filter);
+      itemsResponse = await this.getItemsOverNetwork(type, filter);
       const dirname = this.getDirName();
       try {
         await fsPromises.mkdir(dirname);
@@ -41,17 +41,14 @@ export class Client {
       }
       await fsPromises.writeFile(
         filename,
-        JSON.stringify(items, null, 2) + "\n"
+        JSON.stringify(itemsResponse, null, 2) + "\n"
       );
       console.log(`Saved ${filename}`);
     }
-    return items.map(item => {
-      return this.translate(item, type);
-    });
-
+    return this.translateItemsResponse(itemsResponse, type);
   }
-  translate(item: object, type: string) {
-    return item;
+  translateItemsResponse(itemsResponse: object, type: string): Item[] {
+    return [];
   }
 
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> { return []; }
