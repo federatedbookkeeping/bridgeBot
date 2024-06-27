@@ -2,6 +2,7 @@ const fsPromises = require("fs/promises");
 import { DataStore } from "./data.js";
 import { sync } from "./sync.js";
 import { GitHubClient } from "./client/github.js";
+import { TikiClient } from "./client/tiki.js";
 
 const CONFIG_FILE = 'config.json';
 async function getClientSpecs() {
@@ -15,6 +16,8 @@ async function getClients() {
     switch(spec.type) {
       case 'github':
         return new GitHubClient(spec);
+      case 'tiki':
+        return new TikiClient(spec);
       default:
         throw new Error('unknown replica type');
     }

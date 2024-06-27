@@ -1,33 +1,31 @@
-
 import { Item } from "../model/Item";
 import { Client } from "./client";
 
 
 const DEFAULT_HTTP_HEADERS = {
-  Accept: "application/vnd.github+json",
-  "X-GitHub-Api-Version": "2022-11-28",
+  Accept: "application/json"
 };
 
-const BASE_API_URL = `https://api.github.com/repos`;
-const REL_API_PATH_ISSUES = `issues`;
-const REL_API_PATH_COMMENTS = `comments`;
+const BASE_API_URL = `https://`;
+const REL_API_PATH_TRACKERS = `api/trackers`;
 
-export type GitHubClientSpec = {
+export type TikiClientSpec = {
   // from generic ClientSpec
   name: string;
   type: string;
-  //specific for GitHub
+  //specific for Tiki
   tokens: {
     [user: string]: string;
   };
   defaultUser: string;
-  repo: string;
+  server: string;
+  trackerId: string;
 };
 
-export class GitHubClient extends Client {
-  spec: GitHubClientSpec; // overwrites ClientSpec from parent class
+export class TikiClient extends Client {
+  spec: TikiClientSpec; // overwrites ClientSpec from parent class
   apiUrlIdentifierPrefix: string;
-  constructor(spec: GitHubClientSpec) {
+  constructor(spec: TikiClientSpec) {
     super(spec);
     this.spec = spec;
   }
@@ -57,16 +55,16 @@ export class GitHubClient extends Client {
   }
   getApiUrl(type: string, filter?: { issue: string }): string {
     switch(type) {
-      case 'issue': return `${BASE_API_URL}/${this.spec.repo}/${REL_API_PATH_ISSUES}`;
-      case 'comment': return `${BASE_API_URL}/${this.spec.repo}/${REL_API_PATH_ISSUES}/${filter!.issue}/${REL_API_PATH_COMMENTS}`;
+      case 'issue': return `${BASE_API_URL}/${this.spec.server}/${REL_API_PATH_TRACKERS}/${this.spec.trackerId}`;
+      // case 'comment': return `${BASE_API_URL}/${this.spec.repo}/${REL_API_PATH_ISSUES}/${filter!.issue}/${REL_API_PATH_COMMENTS}`;
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
   translate(item: object, type: string): Item {
     console.log('translating', item, type);
+    const ghItem = item as { number: number, title: string, body: string };
     switch(type) {
       case 'issue':
-        const ghItem = item as { number: number, title: string, body: string };
         return {
           type: 'issue',
           identifier: ghItem.number.toString(),
@@ -78,23 +76,11 @@ export class GitHubClient extends Client {
           }
         } as Item;
       break;
-      case 'comment':
-        const ghComment = item as { id: number, body: string };
-        return {
-          type: 'comment',
-          identifier: ghComment.id.toString(),
-          deleted: false,
-          fields: {
-            body: ghComment.body,
-            completed: false
-          }
-        } as Item;
-      break;
     }
     throw new Error('cannot translate');
   }
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> {
-    console.log('GitHubClient#getItemsOverNetwork', type, filter);
+    console.log('TikiClient#getItemsOverNetwork', type, filter);
     return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });
   }
 
@@ -111,10 +97,10 @@ export class GitHubClient extends Client {
   //   return response.id.toString();
   // }
 
-  // async addIssue(user: string, issue: GitHubIssueAdd): Promise<string> {
+  // async addIssue(user: string, issue: TikiIssueAdd): Promise<string> {
   //   return this.remoteCreate(user, issue.repository_url + REL_API_PATH_ISSUES, issue);
   // }
-  // async addComment(user: string, comment: GitHubCommentAdd): Promise<string> {
+  // async addComment(user: string, comment: TikiCommentAdd): Promise<string> {
   //   return this.remoteCreate(user, comment.issue_url + REL_API_PATH_COMMENTS, comment);
   // }
 
