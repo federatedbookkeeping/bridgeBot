@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "node dist/main.js",
+    "start": "node ./server.js",
+    "sync": "node dist/main.js",
     "build": "tsc src/*.ts src/*/*.ts --outDir dist/"
   },
   "dependencies": {
