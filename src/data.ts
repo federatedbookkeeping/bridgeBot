@@ -12,24 +12,23 @@ export type Operation = {
 
 export class DataStore {
   filename: string
-  items: { [ori: string]: Item } = {};
+  items: { [type: string]: {
+    [ori: string]: Item }
+   } = {
+    issue: {},
+    comment: {}
+  };
   constructor(filename: string) {
     this.filename = filename;
   }
-  add(item) {
-    this.items[item.identifier] = item;
+  add(item: Item) {
+    this.items[item.type][item.identifier] = item;
   }
   getItem(type: string, identifier: string) {
-    return this.items[identifier];
+    return this.items[type][identifier];
   }
   getAllItemsOfType(type: string) {
-    const result: Item[] = [];
-    for (const item of Object.values(this.items)) {
-      if (item.type === type) {
-        result.push(item);
-      }
-    }
-    return result;
+    return Object.values(this.items[type]);
   }
   async load() {
     try {
