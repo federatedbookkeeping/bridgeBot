@@ -1,6 +1,7 @@
 const { createServer } = require('http');
 const port = process.env.PORT || 3000;
 createServer((req, res) => {
+  console.log('processing', req.url, req.method, JSON.stringify(req.headers));
   let body = '';
   req.on('data', function(data) {
     body += data;
@@ -12,10 +13,9 @@ createServer((req, res) => {
     }
   });
   req.on('end', function() {
-    console.log('Received', req.url, req.method, JSON.stringify(req.headers), body);
+    console.log('Body', body);
+    res.end('{ "happy": true }\n');
   });
-
-  res.end('{ "happy": true }');
 }).listen(port);
 console.log('listening on port', port);
 
