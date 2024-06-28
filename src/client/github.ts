@@ -140,7 +140,7 @@ export class GitHubClient extends Client {
       body: JSON.stringify(data, null, 2),
     };
     const response = (await this.apiCall(args)) as { id: number };
-    // console.log(response);
+    console.log(response);
     return response.id.toString();
   }
 

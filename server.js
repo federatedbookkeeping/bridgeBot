@@ -12,7 +12,7 @@ createServer((req, res) => {
     }
   });
   req.on('end', function() {
-    console.log(body);
+    console.log('Received', req.url, req.method, JSON.stringify(req.headers), body);
   });
 
   res.end('{ "happy": true }');
