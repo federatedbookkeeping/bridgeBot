@@ -62,7 +62,7 @@ export class Bridge {
   }
   async pushIssue(issue: Issue) {
     if (typeof this.lriMap.issue.toLocal(issue.identifier) === 'undefined') {
-      console.log(`pushing issue to ${this.client.spec.name}`, issue)
+      console.log(`pushing issue to ${this.client.spec.name}`, issue);
       const local = await this.client.createItem(issue);
       this.lriMap.issue.addMapping({ local, original: issue.identifier });
     } else {
@@ -82,7 +82,7 @@ export class Bridge {
       if (typeof this.lriMap.issue.toLocal(comment.references.issue) === 'undefined') {
         throw new Error('tried to push issue before pushing comment but still failed');
       }
-      this.client.createItem({
+      const local = await this.client.createItem({
         ... comment,
         // original identifier will be used to insert ORI hint.
         // local identifier will get assigned during creation.
@@ -90,6 +90,7 @@ export class Bridge {
           issue: this.lriMap.issue.toLocal(comment.references.issue)
         }
       });
+      this.lriMap.comment.addMapping({ local, original: comment.identifier });
     } else {
       console.log(`no need to push comment to ${this.client.spec.name}`, comment, this.lriMap.comment.toLocal(comment.identifier));
     }
