@@ -1,13 +1,29 @@
 import { Item } from "../model/Item";
-import { Client } from "./client";
+import { Client, FetchedItem } from "./client";
 
 
 const DEFAULT_HTTP_HEADERS = {
   Accept: "application/json"
 };
 
-const REL_API_PATH_TRACKERS = ``;
-const REL_API_PATH_COMMENTS = ``;
+export type TikiIssue = {
+  itemId: number
+  status: string
+  fields: {
+    taskSummary: string,
+    taskDescription: string,
+    taskJob: string,
+    taskURI: string
+  }
+}
+export type TikiComment = {
+  object: string, // issue.itemId.toString()
+  objectType: string // always "trackeritem"
+  userName: string,
+  commentDate: number, // epoch seconds
+  data: string,
+  message_id: string // ORI, e.g. "michielbdejong-0-ce41e38cdc@timesheet.dev4.evoludata.com"
+}
 
 export type TikiClientSpec = {
   // from generic ClientSpec
@@ -60,47 +76,43 @@ export class TikiClient extends Client {
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  translateItem(item: object, type: string): Item {
+  translateItem(item: object, type: string): FetchedItem {
     // console.log('translating', item, type);
     switch(type) {
-      case 'issue':
-        const ttItem = item as {
-          itemId: number,
-          status: string,
-          fields: {
-            taskSummary: string,
-            taskDescription: string
-          }
-        };
+      case 'issue': {
+        const ttItem = item as TikiIssue;
         return {
           type: 'issue',
-          identifier: ttItem.itemId.toString(),
-          deleted: false,
+          localIdentifier: ttItem.itemId.toString(),
+          mintedIdentifier: ttItem.fields.taskURI,
+          hintedIdentifier: ttItem.fields.taskURI,
           fields: {
             title: ttItem.fields.taskSummary,
             body: ttItem.fields.taskDescription,
             completed: (ttItem.status === 'c')
-          }
-        } as Item;
-      break;
-      case 'comment':
-        const ttComment = item as { object: string, objectType: string, userName: string, data: string, message_id: string };
+          },
+          localReferences: {},
+        };
+      }
+      case 'comment': {
+        const ttComment = item as TikiComment;
         return {
           type: 'comment',
-          identifier: ttComment.message_id,
-          deleted: false,
+          localIdentifier: ttComment.message_id,
+          mintedIdentifier: ttComment.message_id,
+          hintedIdentifier: ttComment.message_id,
           fields: {
             body: ttComment.data
           },
-          references: {
+          localReferences: {
             issue: ttComment.object
           }
-        } as Item;
-      break;
+        };
+      }
     }
     throw new Error('cannot translate');
   }
-  translateItemsResponse(itemsResponse: object, type: string): Item[] {
+  translateItemsResponse(itemsResponse: object, type: string): FetchedItem[] {
     switch (type) {
       case 'issue':
         const issuesResponse = itemsResponse as { result: object[] };
@@ -114,7 +126,7 @@ export class TikiClient extends Client {
   }
 
 
-  async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> {
+  async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<object> {
     // console.log('TikiClient#getItemsOverNetwork', type, filter);
     return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });
   }
@@ -177,4 +189,21 @@ export class TikiClient extends Client {
   }
   async deleteItem(type: string, id: string): Promise<void> {
   }
+  mintOri(type: string, local: string, filter?: { issue: string }): string {
+    switch(type) {
+      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}/items/${local}`;
+      case 'comment': return `tiki-message-id:${local}`;
+      default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
+    }
+  }
+  extractOri(type: string, item: Item): string | null {
+    // switch(type) {
+    //   case 'issue': return item.fiel;
+    //   case 'comment': return `tiki-message-id:${local}`;
+    //   default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
+    // }
+
+    return null;
+  }
+
 }

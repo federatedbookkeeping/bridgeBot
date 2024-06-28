@@ -1,7 +1,7 @@
-import { Client } from "./client/client";
+import { Client, FetchedItem } from "./client/client";
 import { DataStore } from "./data";
 import { Issue } from "./model/issue";
-import { Comment } from "./model/comment";
+import { Comment, CommentReferences } from "./model/comment";
 import { LriMap } from "./lrimap";
 
 export class Bridge {
@@ -29,43 +29,44 @@ export class Bridge {
     return Promise.all(promises);
   }
   async fetchAll() {
-    const issues: Issue[] = await this.client.getItems("issue");
-    let comments: Comment[] = [];
+    const issues: FetchedItem[] = await this.client.getItems("issue");
+    let comments: FetchedItem[] = [];
     const commentFetches = issues.map(async (issue) => {
       // console.log("Getting comments for issue", issue);
       const issueComments = await this.client.getItems("comment", {
-        issue: issue.identifier,
+        issue: issue.localIdentifier,
       });
       comments = comments.concat(issueComments);
     });
     await Promise.all(commentFetches);
 
     issues.map(async (issue) => {
-      const extracted = this.client.extractOri('issue', issue);
-      const minted = this.client.mintOri('issue', issue.identifier);
-      const identifier = this.lriMap.issue.toOriginal(issue.identifier, extracted, minted);
-      console.log('mapping issue', issue.identifier, extracted, minted, identifier);
+      const originalIdentifier = this.lriMap.issue.toOriginal(issue);
+      console.log('mapping issue', issue.localIdentifier, issue.hintedIdentifier, issue.mintedIdentifier, originalIdentifier);
       const originalIssue = {
-        ... issue,
-        identifier
+        identifier: originalIdentifier,
+        type: issue.type,
+        deleted: false,
+        fields: issue.fields,
+        references: {}
       }
       this.dataStore.add(originalIssue);
-      console.log('fetched issue added to store', identifier);
+      console.log('fetched issue added to store', originalIdentifier);
     });
     comments.map(async (comment) => {
-      const extracted = this.client.extractOri('comment', comment);
-      const minted = this.client.mintOri('comment', comment.identifier, comment.references);
-      const identifier = this.lriMap.comment.toOriginal(comment.identifier, extracted, minted);
-      console.log('mapping comment', comment.identifier, extracted, minted, identifier);
+      const originalIdentifier = this.lriMap.comment.toOriginal(comment);
+      console.log('mapping comment', comment.localIdentifier, comment.hintedIdentifier, comment.mintedIdentifier, originalIdentifier);
       const originalComment = {
-        ... comment,
-        identifier,
+        identifier: originalIdentifier,
+        type: comment.type,
+        deleted: false,
+        fields: comment.fields,
         references: {
-          issue: this.lriMap.issue.toOriginal(comment.references.issue, null, null)
+          issue: this.lriMap.issue.toOriginal({ localIdentifier: (comment.localReferences as CommentReferences).issue, hintedIdentifier: null, mintedIdentifier: null } as FetchedItem)
         }
       };
       this.dataStore.add(originalComment);
-      console.log('fetched comment added to store', identifier);
+      console.log('fetched comment added to store', originalIdentifier);
     });
   }
   async pushIssue(issue: Issue) {

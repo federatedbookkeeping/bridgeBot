@@ -1,3 +1,5 @@
+import { FetchedItem } from "./client/client";
+
 const fsPromises = require("fs/promises");
 const LRI_DATA_ROOT = 'data/lri';
 
@@ -50,12 +52,12 @@ export class LriMap {
       throw new Error(`Data Store has a mapping that is different from the hinted one - local="${local}", oriFromHint="${oriFromHint}", original="${original}"`);
     }
   }
-  toOriginal(local: string, oriFromHint: string | null, mintIfMissing: string | null) {
-    const original = this.determineOriginal(local, oriFromHint, mintIfMissing);
-    this.map.toOriginal[local] = original;
-    this.map.toLocal[original] = local;
-    console.log('toOriginal calls checkOriFromHint', local, oriFromHint, mintIfMissing, original);
-    this.checkOriFromHint(local, oriFromHint, original);
+  toOriginal(item: FetchedItem) {
+    const original = this.determineOriginal(item.localIdentifier, item.hintedIdentifier, item.mintedIdentifier);
+    this.map.toOriginal[item.localIdentifier] = original;
+    this.map.toLocal[original] = item.localIdentifier;
+    console.log('toOriginal calls checkOriFromHint', item.localIdentifier, item.hintedIdentifier, item.mintedIdentifier, original);
+    this.checkOriFromHint(item.localIdentifier, item.hintedIdentifier, original);
     return original;
   }
   addMapping(identifiers: { local: string; original: string }) {

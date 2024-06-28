@@ -3,6 +3,15 @@ import { Item } from "../model/Item.js";
 
 const CLIENT_DATA_ROOT = 'data/client';
 
+export type FetchedItem = {
+  type: string,
+  localIdentifier: string,
+  mintedIdentifier: string | null,
+  hintedIdentifier: string | null,
+  fields: object,
+  localReferences: object
+}
+
 export type ClientSpec = {
   name: string;
   type: string;
@@ -25,7 +34,7 @@ export class Client {
   }
   async getItems(type: string, filter?: { issue: string }): Promise<any> {
     // console.log('Client#getItems', type, filter);
-    let itemsResponse: Item[] = [];
+    let itemsResponse: object;
     const filename = this.getFilename(type, filter);
     try {
       const buff = await fsPromises.readFile(filename);
@@ -47,11 +56,11 @@ export class Client {
     }
     return this.translateItemsResponse(itemsResponse, type);
   }
-  translateItemsResponse(itemsResponse: object, type: string): Item[] {
+  translateItemsResponse(itemsResponse: object, type: string): FetchedItem[] {
     return [];
   }
 
-  async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> { return []; }
+  async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<object> { return { result: [] }; }
   async createItem(item: Item): Promise<string> {
     console.log('createItem', item.type, item.identifier, item.fields, item.references);
     return 'fake-id';
