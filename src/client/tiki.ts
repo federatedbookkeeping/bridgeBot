@@ -198,21 +198,4 @@ export class TikiClient extends Client {
   }
   async deleteItem(type: string, id: string): Promise<void> {
   }
-  mintOri(type: string, local: string, filter?: { issue: string }): string {
-    switch(type) {
-      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}/items/${local}`;
-      case 'comment': return `tiki-message-id:${local}`;
-      default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
-    }
-  }
-  extractOri(type: string, item: Item): string | null {
-    // switch(type) {
-    //   case 'issue': return item.fiel;
-    //   case 'comment': return `tiki-message-id:${local}`;
-    //   default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
-    // }
-
-    return null;
-  }
-
 }

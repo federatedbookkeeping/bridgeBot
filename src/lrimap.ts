@@ -5,7 +5,6 @@ const LRI_DATA_ROOT = 'data/lri';
 
 export class LriMap {
   filename: string;
-  prefix: string;
   map: {
     toLocal: {
       [original: string]: string;
@@ -17,15 +16,6 @@ export class LriMap {
   constructor(mapName: string) {
     this.filename = `${LRI_DATA_ROOT}/${mapName}.json`;
   }
-  mintOri(local: string) {
-    return this.prefix + local;
-  }
-  parseLocalOri(ori: string) {
-    if (!ori.startsWith(this.prefix)) {
-      throw new Error(`Not a local ORI! ${ori}`);
-    }
-    return ori.substring(this.prefix.length);
-  }
   toLocal(original: string) {
     return this.map.toLocal[original];
   }
@@ -36,7 +26,7 @@ export class LriMap {
     console.log(`Have not seen local identifier "${local}" before`);
     if (oriFromHint === null) {
       if (mintIfMissing === null) {
-        throw new Error(`No ORI found for "${local}`);
+        throw new Error(`No ORI found for "${local}"`);
       }
       console.log(`Minting ORI for ${local}`, mintIfMissing);
       return mintIfMissing;
@@ -63,9 +53,11 @@ export class LriMap {
   addMapping(identifiers: { local: string; original: string }) {
     const { local, original } = identifiers;
     if (typeof this.map.toLocal[original] !== "undefined") {
+      console.log(this.map);
       throw new Error("mapping already exists!");
     }
     if (typeof this.map.toOriginal[local] !== "undefined") {
+      console.log(this.map);
       throw new Error("mapping already exists!");
     }
     this.map.toLocal[original] = local;
