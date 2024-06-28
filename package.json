@@ -2,7 +2,8 @@
   "scripts": {
     "start": "node ./server.js",
     "sync": "node dist/main.js",
-    "build": "tsc src/*.ts src/*/*.ts --outDir dist/ --lib ES2015"
+    "build": "tsc src/*.ts src/*/*.ts --outDir dist/ --lib ES2015",
+    "reset": "rm data/lri/* ; rm data/store.json"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",

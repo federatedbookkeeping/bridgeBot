@@ -69,8 +69,12 @@ export class GitHubClient extends Client {
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  getOriPrefix(): string {
-    return `${BASE_API_URL}/${this.spec.repo}/`;
+  mintOri(type: string, local: string, filter?: { issue: string }): string {
+    switch(type) {
+      case 'issue': return `${this.getApiUrl('issue')}/${local}`;
+      case 'issue': return `${this.getApiUrl('issue')}/${filter!.issue}/comments/${local}`;
+      default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
+    }
   }
   ensureOriHint(body: string, ori: string) {
     const hint = ORI_HINT_PREFIX + ori + ORI_HINT_SUFFIX;
@@ -80,6 +84,7 @@ export class GitHubClient extends Client {
     return hint + body;
   }
   parseOriHint(body: string): string | null {
+    console.log('')
     if (!body.startsWith(ORI_HINT_PREFIX)) {
       console.log('ORI Hint Prefix not found', body);
       return null;
@@ -87,7 +92,7 @@ export class GitHubClient extends Client {
     const rest = body.substring(ORI_HINT_PREFIX.length);
     const start = rest.indexOf(ORI_HINT_SUFFIX);
     if (start === -1) {
-      console.log('ORI Hint Suffix not found', body);
+      console.log(`ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`);
       return null;
     }
     const result = rest.substring(0, start);
@@ -95,6 +100,7 @@ export class GitHubClient extends Client {
     return result;
   }
   extractOri(type: string, item: Item): string | null {
+    console.log(`GitHubClient#extractOri`, type, item);
     return this.parseOriHint((item.fields as { body: string }).body);
   }
   toGitHubIssue(issue: Issue) {

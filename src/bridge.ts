@@ -14,8 +14,8 @@ export class Bridge {
     this.client = client;
     this.dataStore = dataStore;
     this.lriMap = {
-      issue: new LriMap(this.client.getFilename('issue-identifier-map'), this.client.getOriPrefix()),
-      comment: new LriMap(this.client.getFilename('comment-identifier-map'), this.client.getOriPrefix())
+      issue: new LriMap(`${this.client.spec.name}-issues-lri-map`),
+      comment: new LriMap(`${this.client.spec.name}-issues-lri-map`)
     };
   }
   async load() {
@@ -43,7 +43,7 @@ export class Bridge {
     issues.map(async (issue) => {
       const originalIssue = {
         ... issue,
-        identifier: this.lriMap.issue.toOriginal(issue.identifier, this.client.extractOri('issue', issue), true)
+        identifier: this.lriMap.issue.toOriginal(issue.identifier, this.client.extractOri('issue', issue), this.client.mintOri('issue', issue.identifier))
       }
       // console.log("upserting issue", issue, originalIssue);
       this.dataStore.add(originalIssue);
@@ -51,9 +51,9 @@ export class Bridge {
     comments.map(async (comment) => {
       const originalComment = {
         ... comment,
-        identifier: this.lriMap.comment.toOriginal(comment.identifier, this.client.extractOri('comment', comment), true),
+        identifier: this.lriMap.comment.toOriginal(comment.identifier, this.client.extractOri('comment', comment), this.client.mintOri('comment', comment.identifier, comment.references)),
         references: {
-          issue: this.lriMap.issue.toOriginal(comment.references.issue, null, false)
+          issue: this.lriMap.issue.toOriginal(comment.references.issue, null, null)
         }
       };
       // console.log("upserting comment", comment, originalComment);

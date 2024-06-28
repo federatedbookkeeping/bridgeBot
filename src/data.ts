@@ -1,6 +1,5 @@
-import { Item } from "./model/Item";
-
 const fsPromises = require("fs/promises");
+import { Item } from "./model/Item";
 
 export type OperationType = 'upsert' | 'merge' | 'fork';
 export type ObjectType = 'issue' | 'worked' | 'comment';

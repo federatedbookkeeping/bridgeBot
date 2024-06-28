@@ -58,7 +58,7 @@ export class Client {
   }
   async updateItem(type: string, id: string, fields: object, references: object): Promise<void> {}
   async deleteItem(type: string, id: string): Promise<void> {}
-  getOriPrefix(): string {
+  mintOri(type: string, local: string, filter?: { issue: string }): string {
     return 'https://implement.me/';
   }
   extractOri(type: string, item: Item): string | null {

@@ -1,4 +1,5 @@
 const fsPromises = require("fs/promises");
+const LRI_DATA_ROOT = 'data/lri';
 
 export class LriMap {
   filename: string;
@@ -11,8 +12,8 @@ export class LriMap {
       [local: string]: string;
     };
   };
-  constructor(filename: string, prefix: string) {
-    this.filename = filename;
+  constructor(mapName: string) {
+    this.filename = `${LRI_DATA_ROOT}/${mapName}.json`;
   }
   mintOri(local: string) {
     return this.prefix + local;
@@ -26,17 +27,17 @@ export class LriMap {
   toLocal(original: string) {
     return this.map.toLocal[original];
   }
-  determineOriginal(local: string, oriFromHint: string | null, mintIfMissing: boolean): string {
+  determineOriginal(local: string, oriFromHint: string | null, mintIfMissing: string | null): string {
     if (typeof this.map.toOriginal[local] !== "undefined") {
       return this.map.toOriginal[local];
     }
-    console.log(`Have not seen local identifier "${local} before`);
+    console.log(`Have not seen local identifier "${local}" before`);
     if (oriFromHint === null) {
-      if (!mintIfMissing) {
+      if (mintIfMissing === null) {
         throw new Error(`No ORI found for "${local}`);
       }
-      console.log(`Minting ORI for ${local}`);
-      return this.mintOri(local);
+      console.log(`Minting ORI for ${local}`, mintIfMissing);
+      return mintIfMissing;
     } else {
       console.log(`Adopting ORI for ${local} from hint`, oriFromHint);
       return oriFromHint;
@@ -49,7 +50,7 @@ export class LriMap {
       throw new Error(`Data Store has a mapping that is different from the hinted one - local="${local}", oriFromHint="${oriFromHint}", original="${original}"`);
     }
   }
-  toOriginal(local: string, oriFromHint: string | null, mintIfMissing: boolean) {
+  toOriginal(local: string, oriFromHint: string | null, mintIfMissing: string | null) {
     const original = this.determineOriginal(local, oriFromHint, mintIfMissing);
     this.map.toOriginal[local] = original;
     this.map.toLocal[original] = local;
