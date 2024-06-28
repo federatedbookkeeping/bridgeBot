@@ -1,20 +1,54 @@
 [
-    {
-        "type": "github",
-        "name": "upstream",
-        "repo": "federatedbookkeeping/github-dxos",
-        "tokens": {
-            "michielbdejong": "github_pat_11AA..."
-        },
-        "defaultUser": "michielbdejong"
+  {
+    "type": "github",
+    "name": "upstream",
+    "repo": "federatedbookkeeping/github-dxos",
+    "tokens": {
+      "michielbdejong": "github_pat_11A..."
     },
-    {
-        "type": "github",
-        "name": "me",
-        "repo": "michielbdejong/github-dxos",
-        "tokens": {
-            "michielbdejong": "github_pat_11AA..."
-        },
-        "defaultUser": "michielbdejong"
-    }
+    "defaultUser": "michielbdejong"
+  },
+  {
+    "type": "github",
+    "name": "me",
+    "repo": "michielbdejong/github-dxos",
+    "tokens": {
+      "michielbdejong": "github_pat_11A..."
+    },
+    "defaultUser": "michielbdejong"
+  },
+  {
+    "type": "tiki",
+    "name": "tiki",
+    "server": "timesheet.dev4.evoludata.com",
+    "trackerId": "3",
+    "tokens": {
+      "michielbdejong": "3a40a4..."
+    },
+    "fieldPrefix": "task",
+    "fieldMapping": {
+      "Summary": 27,
+      "Description": 28,
+      "Job": 31,
+      "URI": 37
+    },
+    "defaultUser": "michielbdejong"
+  },
+  {
+    "type": "tiki",
+    "name": "copy",
+    "server": "timesheet.dev4.evoludata.com",
+    "trackerId": "4",
+    "tokens": {
+      "michielbdejong": "3a40a4..."
+    },
+    "fieldPrefix": "copyoftaskTask",
+    "fieldMapping": {
+      "Summary": 38,
+      "Description": 39,
+      "Job": 40,
+      "URI": 41
+    },
+    "defaultUser": "michielbdejong"
+  }
 ]

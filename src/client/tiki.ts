@@ -10,10 +10,10 @@ export type TikiIssue = {
   itemId: number
   status: string
   fields: {
-    taskSummary: string,
-    taskDescription: string,
-    taskJob: string,
-    taskURI: string
+    Summary: string,
+    Description: string,
+    Job: string,
+    URI: string
   }
 }
 export type TikiComment = {
@@ -33,6 +33,13 @@ export type TikiClientSpec = {
   tokens: {
     [user: string]: string;
   };
+  fieldsPrefix: string;
+  fieldsMapping: {
+    Summary: number,
+    Description: number,
+    Job: number,
+    URI: number,
+  }
   defaultUser: string;
   server: string;
   trackerId: string;
@@ -84,11 +91,11 @@ export class TikiClient extends Client {
         return {
           type: 'issue',
           localIdentifier: ttItem.itemId.toString(),
-          mintedIdentifier: ttItem.fields.taskURI,
-          hintedIdentifier: ttItem.fields.taskURI,
+          mintedIdentifier: ttItem.fields[`${this.spec.fieldsPrefix}URI`],
+          hintedIdentifier: ttItem.fields[`${this.spec.fieldsPrefix}URI`],
           fields: {
-            title: ttItem.fields.taskSummary,
-            body: ttItem.fields.taskDescription,
+            title: ttItem.fields[`${this.spec.fieldsPrefix}Summary`],
+            body: ttItem.fields[`${this.spec.fieldsPrefix}Description`],
             completed: (ttItem.status === 'c')
           },
           localReferences: {},
@@ -136,19 +143,21 @@ export class TikiClient extends Client {
     switch (item.type) {
       case 'issue': {
         const issueFields = item.fields as { title: string, body: string };
+        const fields = {
+          status: 'o',
+          syntax: 'tiki',
+          trackerId: this.spec.trackerId,
+        };
+        fields[`ins_${this.spec.fieldsMapping.Summary.toString()}`] = issueFields.title;
+        fields[`ins_${this.spec.fieldsMapping.Description.toString()}`] = issueFields.body;
+        fields[`ins_${this.spec.fieldsMapping.Job.toString()}`] = '';
+        fields[`ins_${this.spec.fieldsMapping.URI.toString()}`] = item.identifier;
+
         const response = await this.apiCall({
           url: this.getApiUrl('issue', undefined),
           method: 'POST',
           user: this.spec.defaultUser,
-          body: JSON.stringify({
-            status: 'o',
-            ins_27: issueFields.title,          
-            syntax: 'tiki',
-            ins_28: 3,
-            ins_31: issueFields.body,
-            'ins33[]': this.spec.defaultUser,
-            trackerId: this.spec.trackerId,
-          })
+          body: JSON.stringify(fields)
         });
         console.log(response);
         return 'fake-id';
