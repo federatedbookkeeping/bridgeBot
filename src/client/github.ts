@@ -72,7 +72,7 @@ export class GitHubClient extends Client {
   mintOri(type: string, local: string, filter?: { issue: string }): string {
     switch(type) {
       case 'issue': return `${this.getApiUrl('issue')}/${local}`;
-      case 'issue': return `${this.getApiUrl('issue')}/${filter!.issue}/comments/${local}`;
+      case 'comment': return `${this.getApiUrl('issue')}/comments/${local}`;
       default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
     }
   }

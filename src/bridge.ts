@@ -15,7 +15,7 @@ export class Bridge {
     this.dataStore = dataStore;
     this.lriMap = {
       issue: new LriMap(`${this.client.spec.name}-issues-lri-map`),
-      comment: new LriMap(`${this.client.spec.name}-issues-lri-map`)
+      comment: new LriMap(`${this.client.spec.name}-comments-lri-map`)
     };
   }
   async load() {
