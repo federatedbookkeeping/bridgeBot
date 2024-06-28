@@ -12,25 +12,21 @@ export type Operation = {
 
 export class DataStore {
   filename: string
-  items: Item[] = [];
+  items: { [ori: string]: Item } = {};
   constructor(filename: string) {
     this.filename = filename;
   }
   add(item) {
-    this.items.push(item);
+    this.items[item.identifier] = item;
   }
   getItem(type: string, identifier: string) {
-    for (let i = 0; i < this.items.length; i++) {
-      if ((this.items[i].type === type) && (this.items[i].identifier === identifier)) {
-        return this.items[i];
-      }
-    }
+    return this.items[identifier];
   }
   getAllItemsOfType(type: string) {
     const result: Item[] = [];
-    for (let i = 0; i < this.items.length; i++) {
-      if (this.items[i].type === type) {
-        result.push(this.items[i]);
+    for (const item of Object.values(this.items)) {
+      if (item.type === type) {
+        result.push(item);
       }
     }
     return result;
