@@ -95,15 +95,24 @@ export class Bridge {
     }
   }
   async pushAll() {
+    console.log('issue push start');
     // push all issues
     const issuePromises = this.dataStore.getAllItemsOfType('issue').map(item => {
-      this.pushIssue(item as Issue);
+      console.log(`Push issue ${item.identifier}`);
+      return this.pushIssue(item as Issue);
     });
+    console.log('issue push await');
     await Promise.all(issuePromises);
+    console.log('issue push done');
+    
     // push all comments
+    console.log('comment push start');
     const commentPromises = this.dataStore.getAllItemsOfType('comment').map(item => {
-      this.pushComment(item as Comment);
+      console.log(`Push comment ${item.identifier}`);
+      return this.pushComment(item as Comment);
     });
+    console.log('comment push await');
     await Promise.all(commentPromises);
+    console.log('comment push done');
   }
 }
