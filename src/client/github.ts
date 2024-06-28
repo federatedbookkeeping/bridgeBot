@@ -3,6 +3,9 @@ import { Issue } from "../model/issue";
 import { Comment } from "../model/comment";
 import { Client } from "./client";
 
+const ORI_HINT_PREFIX = `<!-- BridgeBot copy of `;
+const ORI_HINT_SUFFIX = ` -->\n`;
+
 const DEFAULT_HTTP_HEADERS = {
   Accept: "application/vnd.github+json",
   "X-GitHub-Api-Version": "2022-11-28",
@@ -66,15 +69,45 @@ export class GitHubClient extends Client {
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  toGitHubIssue(fields: { title: string; body: string }) {
+  getOriPrefix(): string {
+    return `${BASE_API_URL}/${this.spec.repo}/`;
+  }
+  ensureOriHint(body: string, ori: string) {
+    const hint = ORI_HINT_PREFIX + ori + ORI_HINT_SUFFIX;
+    if (body.startsWith(hint)) {
+      return body;
+    }
+    return hint + body;
+  }
+  parseOriHint(body: string): string | null {
+    if (!body.startsWith(ORI_HINT_PREFIX)) {
+      console.log('ORI Hint Prefix not found', body);
+      return null;
+    }
+    const rest = body.substring(ORI_HINT_PREFIX.length);
+    const start = rest.indexOf(ORI_HINT_SUFFIX);
+    if (start === -1) {
+      console.log('ORI Hint Suffix not found', body);
+      return null;
+    }
+    const result = rest.substring(0, start);
+    console.log('Parsed ORI Hint', result, body);
+    return result;
+  }
+  extractOri(type: string, item: Item): string | null {
+    return this.parseOriHint((item.fields as { body: string }).body);
+  }
+  toGitHubIssue(issue: Issue) {
+    const body = this.ensureOriHint(issue.fields.body, issue.identifier);
     return {
-      title: fields.title,
-      body: fields.body,
+      title: issue.fields.title,
+      body,
     };
   }
-  toGitHubComment(fields: { body: string }) {
+  toGitHubComment(comment: Comment) {
+    const body = this.ensureOriHint(comment.fields.body, comment.identifier);
     return {
-      body: fields.body,
+      body,
     };
   }
 
@@ -144,26 +177,24 @@ export class GitHubClient extends Client {
     return response.id.toString();
   }
 
-  async createItem(
-    type: string,
-    fields: object,
-    references: object
-  ): Promise<string> {
-    switch (type) {
+  async createItem(item: Item): Promise<string> {
+    switch (item.type) {
       case "issue":
+        const issue = item as Issue;
         return this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("issue"),
-          this.toGitHubIssue(fields as { title: string; body: string })
+          this.toGitHubIssue(issue)
         );
       case "comment":
+        const comment = item as Comment;
         return this.remoteCreate(
           this.spec.defaultUser,
-          this.getApiUrl("comment", references as { issue: string }),
-          this.toGitHubComment(fields as { body: string })
+          this.getApiUrl("comment", item.references as { issue: string }),
+          this.toGitHubComment(comment)
         );
       default:
-        throw new Error(`Unknown item type ${type}`);
+        throw new Error(`Unknown item type ${item.type}`);
     }
   }
   async updateItem(type: string, id: string, fields: object): Promise<void> {}

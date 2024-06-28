@@ -3,41 +3,70 @@ import { v4 as uuid } from "uuid";
 
 export class LriMap {
   filename: string;
+  prefix: string;
   map: {
     toLocal: {
-      [universal: string]: string;
+      [original: string]: string;
     };
-    toUniversal: {
+    toOriginal: {
       [local: string]: string;
     };
   };
-  constructor(filename: string) {
+  constructor(filename: string, prefix: string) {
     this.filename = filename;
   }
-  toLocal(universal: string) {
-    return this.map.toLocal[universal];
+  mintOri(local: string) {
+    return this.prefix + local;
   }
-  toUniversal(local: string) {
-    if (typeof this.map.toUniversal[local] === "undefined") {
-      const universal = uuid();
-      console.log(
-        `Have not seen local identifier "${local} before, assigning "${universal}`
-      );
-      this.map.toUniversal[local] = universal;
-      this.map.toLocal[universal] = local;
+  parseLocalOri(ori: string) {
+    if (!ori.startsWith(this.prefix)) {
+      throw new Error(`Not a local ORI! ${ori}`);
     }
-    return this.map.toUniversal[local];
+    return ori.substring(this.prefix.length);
   }
-  addMapping(identifiers: { local: string; universal: string }) {
-    const { local, universal } = identifiers;
-    if (typeof this.map.toLocal[universal] !== "undefined") {
+  toLocal(original: string) {
+    return this.map.toLocal[original];
+  }
+  determineOriginal(local: string, oriFromHint: string | null, mintIfMissing: boolean): string {
+    if (typeof this.map.toOriginal[local] !== "undefined") {
+      return this.map.toOriginal[local];
+    }
+    console.log(`Have not seen local identifier "${local} before`);
+    if (oriFromHint === null) {
+      if (!mintIfMissing) {
+        throw new Error(`No ORI found for "${local}`);
+      }
+      console.log(`Minting ORI for ${local}`);
+      return this.mintOri(local);
+    } else {
+      console.log(`Adopting ORI for ${local} from hint`, oriFromHint);
+      return oriFromHint;
+    }
+  }
+  checkOriFromHint(local: string, oriFromHint: string | null, original: string): void {
+    if (oriFromHint === null) {
+      console.error(`Consider adding an ORI hint for this item in this replica`, local, oriFromHint, original);
+    } else if (oriFromHint !== original) {
+      throw new Error(`Data Store has a mapping that is different from the hinted one - local="${local}", oriFromHint="${oriFromHint}", original="${original}"`);
+    }
+  }
+  toOriginal(local: string, oriFromHint: string | null, mintIfMissing: boolean) {
+    const original = this.determineOriginal(local, oriFromHint, mintIfMissing);
+    this.map.toOriginal[local] = original;
+    this.map.toLocal[original] = local;
+    this.checkOriFromHint(local, oriFromHint, original);
+    return original;
+  }
+  addMapping(identifiers: { local: string; original: string }) {
+    const { local, original } = identifiers;
+    if (typeof this.map.toLocal[original] !== "undefined") {
       throw new Error("mapping already exists!");
     }
-    if (typeof this.map.toUniversal[local] !== "undefined") {
+    if (typeof this.map.toOriginal[local] !== "undefined") {
       throw new Error("mapping already exists!");
     }
-    this.map.toLocal[universal] = local;
-    this.map.toUniversal[local] = universal;
+    this.map.toLocal[original] = local;
+    this.map.toOriginal[local] = original;
   }
   async load() {
     try {
@@ -48,7 +77,7 @@ export class LriMap {
       console.log(`Failed to load ${this.filename}`);
       this.map = {
         toLocal: {},
-        toUniversal: {},
+        toOriginal: {},
       };
     }
   }

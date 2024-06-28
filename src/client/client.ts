@@ -52,10 +52,16 @@ export class Client {
   }
 
   async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<Item[]> { return []; }
-  async createItem(type: string, fields: object, references: object): Promise<string> {
-    console.log('createItem', type, fields, references);
+  async createItem(item: Item): Promise<string> {
+    console.log('createItem', item.type, item.identifier, item.fields, item.references);
     return 'fake-id';
   }
   async updateItem(type: string, id: string, fields: object, references: object): Promise<void> {}
   async deleteItem(type: string, id: string): Promise<void> {}
+  getOriPrefix(): string {
+    return 'https://implement.me/';
+  }
+  extractOri(type: string, item: Item): string | null {
+    return null;
+  }
 }

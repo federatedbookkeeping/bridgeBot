@@ -14,8 +14,8 @@ export class Bridge {
     this.client = client;
     this.dataStore = dataStore;
     this.lriMap = {
-      issue: new LriMap(this.client.getFilename('issue-identifier-map')),
-      comment: new LriMap(this.client.getFilename('comment-identifier-map'))
+      issue: new LriMap(this.client.getFilename('issue-identifier-map'), this.client.getOriPrefix()),
+      comment: new LriMap(this.client.getFilename('comment-identifier-map'), this.client.getOriPrefix())
     };
   }
   async load() {
@@ -41,30 +41,30 @@ export class Bridge {
     await Promise.all(commentFetches);
 
     issues.map(async (issue) => {
-      const universalIssue = {
+      const originalIssue = {
         ... issue,
-        identifier: this.lriMap.issue.toUniversal(issue.identifier)
+        identifier: this.lriMap.issue.toOriginal(issue.identifier, this.client.extractOri('issue', issue), true)
       }
-      // console.log("upserting issue", issue, universalIssue);
-      this.dataStore.add(universalIssue);
+      // console.log("upserting issue", issue, originalIssue);
+      this.dataStore.add(originalIssue);
     });
     comments.map(async (comment) => {
-      const universalComment = {
+      const originalComment = {
         ... comment,
-        identifier: this.lriMap.comment.toUniversal(comment.identifier),
+        identifier: this.lriMap.comment.toOriginal(comment.identifier, this.client.extractOri('comment', comment), true),
         references: {
-          issue: this.lriMap.issue.toUniversal(comment.references.issue)
+          issue: this.lriMap.issue.toOriginal(comment.references.issue, null, false)
         }
       };
-      // console.log("upserting comment", comment, universalComment);
-      this.dataStore.add(universalComment);
+      // console.log("upserting comment", comment, originalComment);
+      this.dataStore.add(originalComment);
     });
   }
   async pushIssue(issue: Issue) {
     if (typeof this.lriMap.issue.toLocal(issue.identifier) === 'undefined') {
       console.log(`pushing issue to ${this.client.spec.name}`, issue)
-      const local = await this.client.createItem('issue', issue.fields, {});
-      this.lriMap.issue.addMapping({ local, universal: issue.identifier });
+      const local = await this.client.createItem(issue);
+      this.lriMap.issue.addMapping({ local, original: issue.identifier });
     } else {
       console.log(`no need to push issue to ${this.client.spec.name}`, issue, this.lriMap.issue.toLocal(issue.identifier));
     }
@@ -82,8 +82,13 @@ export class Bridge {
       if (typeof this.lriMap.issue.toLocal(comment.references.issue) === 'undefined') {
         throw new Error('tried to push issue before pushing comment but still failed');
       }
-      this.client.createItem('comment', comment.fields, {
-        issue: this.lriMap.issue.toLocal(comment.references.issue)
+      this.client.createItem({
+        ... comment,
+        // original identifier will be used to insert ORI hint.
+        // local identifier will get assigned during creation.
+        references: {
+          issue: this.lriMap.issue.toLocal(comment.references.issue)
+        }
       });
     } else {
       console.log(`no need to push comment to ${this.client.spec.name}`, comment, this.lriMap.comment.toLocal(comment.identifier));

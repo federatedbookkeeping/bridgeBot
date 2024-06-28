@@ -119,11 +119,11 @@ export class TikiClient extends Client {
     return this.apiCall({ url: this.getApiUrl(type, filter), method: "GET", user: this.spec.defaultUser });
   }
 
-  async createItem(type: string, fields: object, references: object): Promise<string> {
-    console.log('createItem', type, fields, references);
-    switch (type) {
+  async createItem(item: Item): Promise<string> {
+    console.log('createItem', item.type, item.identifier, item.fields, item.references);
+    switch (item.type) {
       case 'issue': {
-        const issueFields = fields as { title: string, body: string };
+        const issueFields = item.fields as { title: string, body: string };
         const response = await this.apiCall({
           url: this.getApiUrl('issue', undefined),
           method: 'POST',
@@ -142,8 +142,8 @@ export class TikiClient extends Client {
         return 'fake-id';
       }
       case 'comment': {
-        const commentFields = fields as { body: string };
-        const commentReferences = references as { issue: string };
+        const commentFields = item.fields as { body: string };
+        const commentReferences = item.references as { issue: string };
         const response = await this.apiCall({
           url: this.getApiUrl('issue', undefined),
           method: 'POST',
@@ -167,7 +167,7 @@ export class TikiClient extends Client {
         return 'fake-id';
       }
       default:
-        throw new Error(`TikiClient cannot create items of type ${type}`);
+        throw new Error(`TikiClient cannot create items of type ${item.type}`);
     }
     // const itemUrl = await this.addItem(this.spec.defaultUser, fields);
     //   return `${API_URL_ID_SCHEME}:${itemUrl}`;
