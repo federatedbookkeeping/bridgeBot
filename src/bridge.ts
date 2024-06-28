@@ -96,12 +96,14 @@ export class Bridge {
   }
   async pushAll() {
     // push all issues
-    this.dataStore.getAllItemsOfType('issue').map(item => {
+    const issuePromises = this.dataStore.getAllItemsOfType('issue').map(item => {
       this.pushIssue(item as Issue);
-    })
+    });
+    await Promise.all(issuePromises);
     // push all comments
-    this.dataStore.getAllItemsOfType('comment').map(item => {
+    const commentPromises = this.dataStore.getAllItemsOfType('comment').map(item => {
       this.pushComment(item as Comment);
-    })
+    });
+    await Promise.all(commentPromises);
   }
 }
