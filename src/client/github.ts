@@ -179,26 +179,34 @@ export class GitHubClient extends Client {
       body: JSON.stringify(data, null, 2),
     };
     const response = (await this.apiCall(args)) as { id: number };
-    console.log(response);
+    console.log('remoteCreate response', response);
     return response.id.toString();
   }
 
   async createItem(item: Item): Promise<string> {
     switch (item.type) {
-      case "issue":
+      case "issue": {
         const issue = item as Issue;
-        return this.remoteCreate(
+        console.log('createItem awaits remoteCreate for issue');
+        const result = await this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("issue"),
           this.toGitHubIssue(issue)
         );
-      case "comment":
+        console.log('createItem result for issue', result);
+        return result;
+      }
+      case "comment": {
         const comment = item as Comment;
-        return this.remoteCreate(
+        console.log('createItem awaits remoteCreate for comment');
+        const result = this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("comment", item.references as { issue: string }),
           this.toGitHubComment(comment)
         );
+        console.log('createItem result for comment', result);
+        return result;
+      }
       default:
         throw new Error(`Unknown item type ${item.type}`);
     }
