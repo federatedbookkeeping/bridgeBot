@@ -33,8 +33,8 @@ export type TikiClientSpec = {
   tokens: {
     [user: string]: string;
   };
-  fieldsPrefix: string;
-  fieldsMapping: {
+  fieldPrefix: string;
+  fieldMapping: {
     Summary: number,
     Description: number,
     Job: number,
@@ -83,19 +83,20 @@ export class TikiClient extends Client {
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
-  translateItem(item: object, type: string): FetchedItem {
+  translateFetchedItem(item: object, type: string): FetchedItem {
     // console.log('translating', item, type);
     switch(type) {
       case 'issue': {
         const ttItem = item as TikiIssue;
+        console.log("extracting identifiers and fields from ttItem", ttItem);
         return {
           type: 'issue',
           localIdentifier: ttItem.itemId.toString(),
-          mintedIdentifier: ttItem.fields[`${this.spec.fieldsPrefix}URI`],
-          hintedIdentifier: ttItem.fields[`${this.spec.fieldsPrefix}URI`],
+          mintedIdentifier: ttItem.fields[`${this.spec.fieldPrefix}URI`],
+          hintedIdentifier: ttItem.fields[`${this.spec.fieldPrefix}URI`],
           fields: {
-            title: ttItem.fields[`${this.spec.fieldsPrefix}Summary`],
-            body: ttItem.fields[`${this.spec.fieldsPrefix}Description`],
+            title: ttItem.fields[`${this.spec.fieldPrefix}Summary`],
+            body: ttItem.fields[`${this.spec.fieldPrefix}Description`],
             completed: (ttItem.status === 'c')
           },
           localReferences: {},
@@ -103,6 +104,7 @@ export class TikiClient extends Client {
       }
       case 'comment': {
         const ttComment = item as TikiComment;
+        console.log("extracting identifiers, fields and issue reference from ttComment", ttComment);
         return {
           type: 'comment',
           localIdentifier: ttComment.message_id,
@@ -123,10 +125,10 @@ export class TikiClient extends Client {
     switch (type) {
       case 'issue':
         const issuesResponse = itemsResponse as { result: object[] };
-        return issuesResponse.result.map(item => this.translateItem(item, type));
+        return issuesResponse.result.map(item => this.translateFetchedItem(item, type));
       case 'comment':
         const commentsResponse = itemsResponse as { comments: object[] };
-        return commentsResponse.comments.map(item => this.translateItem(item, type));
+        return commentsResponse.comments.map(item => this.translateFetchedItem(item, type));
       default:
         throw new Error(`Cannot translate items response of type ${type}`);
       }
@@ -148,10 +150,10 @@ export class TikiClient extends Client {
           syntax: 'tiki',
           trackerId: this.spec.trackerId,
         };
-        fields[`ins_${this.spec.fieldsMapping.Summary.toString()}`] = issueFields.title;
-        fields[`ins_${this.spec.fieldsMapping.Description.toString()}`] = issueFields.body;
-        fields[`ins_${this.spec.fieldsMapping.Job.toString()}`] = '';
-        fields[`ins_${this.spec.fieldsMapping.URI.toString()}`] = item.identifier;
+        fields[`ins_${this.spec.fieldMapping.Summary.toString()}`] = issueFields.title;
+        fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body;
+        fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
+        fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
 
         const response = await this.apiCall({
           url: this.getApiUrl('issue', undefined),
