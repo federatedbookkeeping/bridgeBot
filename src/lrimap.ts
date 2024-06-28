@@ -54,6 +54,7 @@ export class LriMap {
     const original = this.determineOriginal(local, oriFromHint, mintIfMissing);
     this.map.toOriginal[local] = original;
     this.map.toLocal[original] = local;
+    console.log('toOriginal calls checkOriFromHint', local, oriFromHint, mintIfMissing, original);
     this.checkOriFromHint(local, oriFromHint, original);
     return original;
   }

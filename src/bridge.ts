@@ -41,23 +41,31 @@ export class Bridge {
     await Promise.all(commentFetches);
 
     issues.map(async (issue) => {
+      const extracted = this.client.extractOri('issue', issue);
+      const minted = this.client.mintOri('issue', issue.identifier);
+      const identifier = this.lriMap.issue.toOriginal(issue.identifier, extracted, minted);
+      console.log('mapping issue', issue.identifier, extracted, minted, identifier);
       const originalIssue = {
         ... issue,
-        identifier: this.lriMap.issue.toOriginal(issue.identifier, this.client.extractOri('issue', issue), this.client.mintOri('issue', issue.identifier))
+        identifier
       }
-      // console.log("upserting issue", issue, originalIssue);
       this.dataStore.add(originalIssue);
+      console.log('fetched issue added to store', identifier);
     });
     comments.map(async (comment) => {
+      const extracted = this.client.extractOri('comment', comment);
+      const minted = this.client.mintOri('comment', comment.identifier, comment.references);
+      const identifier = this.lriMap.comment.toOriginal(comment.identifier, extracted, minted);
+      console.log('mapping comment', comment.identifier, extracted, minted, identifier);
       const originalComment = {
         ... comment,
-        identifier: this.lriMap.comment.toOriginal(comment.identifier, this.client.extractOri('comment', comment), this.client.mintOri('comment', comment.identifier, comment.references)),
+        identifier,
         references: {
           issue: this.lriMap.issue.toOriginal(comment.references.issue, null, null)
         }
       };
-      // console.log("upserting comment", comment, originalComment);
       this.dataStore.add(originalComment);
+      console.log('fetched comment added to store', identifier);
     });
   }
   async pushIssue(issue: Issue) {

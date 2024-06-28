@@ -198,7 +198,7 @@ export class GitHubClient extends Client {
       }
       case "comment": {
         const comment = item as Comment;
-        console.log('createItem awaits remoteCreate for comment');
+        console.log('createItem awaits remoteCreate for comment', comment);
         const result = this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("comment", item.references as { issue: string }),
