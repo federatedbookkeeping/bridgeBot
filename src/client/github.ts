@@ -1,7 +1,7 @@
 import { Item } from "../model/Item";
 import { Issue } from "../model/issue";
 import { Comment } from "../model/comment";
-import { Client } from "./client";
+import { Client, FetchedItem } from "./client";
 
 const ORI_HINT_PREFIX = `<!-- BridgeBot copy of `;
 const ORI_HINT_SUFFIX = ` -->\n`;
@@ -14,6 +14,18 @@ const DEFAULT_HTTP_HEADERS = {
 const BASE_API_URL = `https://api.github.com/repos`;
 const REL_API_PATH_ISSUES = `issues`;
 const REL_API_PATH_COMMENTS = `comments`;
+
+export type GitHubIssue = {
+  number: number,
+  title: string,
+  body: string
+}
+
+export type GitHubComment = {
+    id: number,
+    body: string,
+    issue_url: string
+}
 
 export type GitHubClientSpec = {
   // from generic ClientSpec
@@ -99,10 +111,6 @@ export class GitHubClient extends Client {
     console.log('Parsed ORI Hint', result, body);
     return result;
   }
-  extractOri(type: string, item: Item): string | null {
-    console.log(`GitHubClient#extractOri`, type, item);
-    return this.parseOriHint((item.fields as { body: string }).body);
-  }
   toGitHubIssue(issue: Issue) {
     const body = this.ensureOriHint(issue.fields.body, issue.identifier);
     return {
@@ -117,45 +125,47 @@ export class GitHubClient extends Client {
     };
   }
 
-  translateItem(item: object, type: string): Item {
+  translateGhItem(item: object, type: string): FetchedItem {
     // console.log('translating', item, type);
     switch (type) {
       case "issue":
-        const ghItem = item as { number: number; title: string; body: string };
+        const ghIssue = item as GitHubIssue;
         return {
           type: "issue",
-          identifier: ghItem.number.toString(),
+          localIdentifier: ghIssue.number.toString(),
+          hintedIdentifier: this.parseOriHint(ghIssue.body),
+          mintedIdentifier: this.mintOri(type, ghIssue.number.toString()),
           deleted: false,
           fields: {
-            title: ghItem.title,
-            body: ghItem.body,
+            title: ghIssue.title,
+            body: ghIssue.body,
             completed: false,
           },
-        } as Item;
+          localReferences: {}
+        } as FetchedItem;
         break;
       case "comment":
-        const ghComment = item as {
-          id: number;
-          body: string;
-          issue_url: string;
+        const ghComment = item as GitHubComment;
+        const localReferences = {
+          issue: ghComment.issue_url.split("/").slice(-1)[0]
         };
         return {
           type: "comment",
-          identifier: ghComment.id.toString(),
+          localIdentifier: ghComment.id.toString(),
+          hintedIdentifier: this.parseOriHint(ghComment.body),
+          mintedIdentifier: this.mintOri(type, ghComment.id.toString(), localReferences),
           deleted: false,
           fields: {
             body: ghComment.body,
           },
-          references: {
-            issue: ghComment.issue_url.split("/").slice(-1),
-          },
-        } as Item;
+          localReferences,
+        } as FetchedItem;
         break;
     }
     throw new Error("cannot translate");
   }
-  translateItemsResponse(itemsResponse: object[], type: string): Item[] {
-    return itemsResponse.map((item) => this.translateItem(item, type));
+  translateItemsResponse(itemsResponse: object[], type: string): FetchedItem[] {
+    return itemsResponse.map((item) => this.translateGhItem(item, type));
   }
 
   async getItemsOverNetwork(
