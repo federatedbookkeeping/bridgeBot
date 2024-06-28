@@ -44,8 +44,8 @@ async function run(): Promise<void> {
   await Promise.all(bridges.map(bridge => bridge.load()));
   console.log('fetching all bridges');
   await Promise.all(bridges.map(bridge => bridge.fetchAll()));
-  // console.log('pushing all bridges');
-  // await Promise.all(bridges.map(bridge => bridge.pushAll()));
+  console.log('pushing all bridges');
+  await Promise.all(bridges.map(bridge => bridge.pushAll()));
   console.log('saving all bridges');
   await Promise.all(bridges.map(bridge => bridge.save()));
   console.log('saving data store');
