@@ -91,9 +91,9 @@ export class TikiClient extends FetchCachingClient {
   getApiUrl(type: string, filter?: { issue: string }): string {
     switch(type) {
       case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}`;
-      // case 'issue-create': return `https://${this.spec.server}/tiki-tracker-insert_item`;
       case 'issue-create': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}/items`;
       case 'comment': return `https://${this.spec.server}/api/comments?type=trackeritem&objectId=${filter!.issue}`;
+      case 'comment-create': return `https://${this.spec.server}/api/comments`;
     }
     throw new Error(`No API URL found for data type ${type}`);
   }
@@ -184,29 +184,29 @@ export class TikiClient extends FetchCachingClient {
         return response.itemId;
       }
       case 'comment': {
+        const url = this.getApiUrl('comment-create', undefined);
         const commentFields = item.fields as { body: string };
         const commentReferences = item.references as { issue: string };
+        const fields = {
+          type: 'trackeritem',
+          objectId: commentReferences.issue,
+          post: 1,
+          syntax: 'tiki',
+          data: commentFields.body
+        };
+        const body = Object.keys(fields).map(key  => `${encodeURIComponent(key)}=${encodeURIComponent(fields[key])}`).join('&');
         const response = await this.apiCall({
-          url: this.getApiUrl('issue', undefined),
+          url,
           method: 'POST',
           user: this.spec.defaultUser,
-          body: JSON.stringify({
-            type: 'trackeritem',
-            objectId: commentReferences.issue,
-            post: 1,
-            syntax: 'tiki',
-            data: commentFields.body
-          })
+          body
         });
         console.log(response);
-      //   {
-      //     "threadId": "2",
-      //     "parentId": 0,
-      //     "type": "trackeritem",
-      //     "objectId": "686",
-      //     "feedback": []
-      // }
-        return 'fake-id';
+        if ([404, 409].indexOf(response.code) !== -1) {
+          throw new Error(`${response.code} response from the Tiki API`);
+        }
+        console.log('Sent', body, 'To', url, 'Received', response);
+        return response.threadId;
       }
       default:
         throw new Error(`TikiClient cannot create items of type ${item.type}`);
