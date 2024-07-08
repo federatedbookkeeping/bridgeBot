@@ -17,10 +17,22 @@ export type ClientSpec = {
   type: string;
 };
 
-export class Client {
+export abstract class Client {
+  abstract getName(): string;
+  abstract getItems(type: string, filter?: { issue: string }): Promise<any>;
+  abstract createItem(item: Item): Promise<string>;
+  abstract updateItem(type: string, id: string, fields: object, references: object): Promise<void>;
+  abstract deleteItem(type: string, id: string): Promise<void>;
+}
+
+export abstract class FetchCachingClient extends Client {
   spec: ClientSpec; // overwritten in child classes
   constructor(spec: ClientSpec) {
+    super();
     this.spec = spec;
+  }
+  getName() {
+    return this.spec.name;
   }
   getDirName() {
     return `${CLIENT_DATA_ROOT}/${this.spec.name}`;
@@ -56,15 +68,6 @@ export class Client {
     }
     return this.translateItemsResponse(itemsResponse, type);
   }
-  translateItemsResponse(itemsResponse: object, type: string): FetchedItem[] {
-    return [];
-  }
-
-  async getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<object> { return { result: [] }; }
-  async createItem(item: Item): Promise<string> {
-    console.log('createItem', item.type, item.identifier, item.fields, item.references);
-    return 'fake-id';
-  }
-  async updateItem(type: string, id: string, fields: object, references: object): Promise<void> {}
-  async deleteItem(type: string, id: string): Promise<void> {}
+  abstract translateItemsResponse(itemsResponse: object, type: string): FetchedItem[];
+  abstract getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<object>;
 }

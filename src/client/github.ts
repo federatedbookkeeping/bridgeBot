@@ -1,7 +1,7 @@
 import { Item } from "../model/Item";
 import { Issue } from "../model/issue";
 import { Comment } from "../model/comment";
-import { Client, FetchedItem } from "./client";
+import { FetchCachingClient, FetchedItem } from "./client";
 
 const ORI_HINT_PREFIX = `<!-- BridgeBot copy of `;
 const ORI_HINT_SUFFIX = ` -->\n`;
@@ -39,7 +39,7 @@ export type GitHubClientSpec = {
   repo: string;
 };
 
-export class GitHubClient extends Client {
+export class GitHubClient extends FetchCachingClient {
   spec: GitHubClientSpec; // overwrites ClientSpec from parent class
   apiUrlIdentifierPrefix: string;
   constructor(spec: GitHubClientSpec) {

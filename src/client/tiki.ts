@@ -1,5 +1,5 @@
 import { Item } from "../model/Item";
-import { Client, FetchedItem } from "./client";
+import { FetchCachingClient, FetchedItem } from "./client";
 
 
 const DEFAULT_HTTP_HEADERS = {
@@ -45,7 +45,7 @@ export type TikiClientSpec = {
   trackerId: string;
 };
 
-export class TikiClient extends Client {
+export class TikiClient extends FetchCachingClient {
   spec: TikiClientSpec; // overwrites ClientSpec from parent class
   apiUrlIdentifierPrefix: string;
   constructor(spec: TikiClientSpec) {

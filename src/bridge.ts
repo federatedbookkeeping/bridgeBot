@@ -14,8 +14,8 @@ export class Bridge {
     this.client = client;
     this.dataStore = dataStore;
     this.lriMap = {
-      issue: new LriMap(`${this.client.spec.name}-issues-lri-map`),
-      comment: new LriMap(`${this.client.spec.name}-comments-lri-map`)
+      issue: new LriMap(`${this.client.getName()}-issues-lri-map`),
+      comment: new LriMap(`${this.client.getName()}-comments-lri-map`)
     };
   }
   async load() {
@@ -71,18 +71,18 @@ export class Bridge {
   }
   async pushIssue(issue: Issue) {
     if (typeof this.lriMap.issue.toLocal(issue.identifier) === 'undefined') {
-      console.log(`pushing issue to ${this.client.spec.name}`, issue);
+      console.log(`pushing issue to ${this.client.getName()}`, issue);
       const local = await this.client.createItem(issue);
       console.log('issue created, adding mapping', local, issue.identifier);
       this.lriMap.issue.addMapping({ local, original: issue.identifier });
     } else {
-      console.log(`no need to push issue to ${this.client.spec.name}`, issue, this.lriMap.issue.toLocal(issue.identifier));
+      console.log(`no need to push issue to ${this.client.getName()}`, issue, this.lriMap.issue.toLocal(issue.identifier));
     }
     console.log('pushIssue done', issue.identifier);
   }
   async pushComment(comment: Comment) {
     if (typeof this.lriMap.comment.toLocal(comment.identifier) === 'undefined') {
-      console.log(`pushing comment to ${this.client.spec.name}`, comment)
+      console.log(`pushing comment to ${this.client.getName()}`, comment)
       if (typeof this.lriMap.issue.toLocal(comment.references.issue) === 'undefined') {
         console.error(`Cannot create comment without creating the issue first`);
         const issue = this.dataStore.getItem('issue', comment.references.issue);
@@ -105,7 +105,7 @@ export class Bridge {
       console.log('comment created, adding mapping', local, comment.identifier);
       this.lriMap.comment.addMapping({ local, original: comment.identifier });
     } else {
-      console.log(`no need to push comment to ${this.client.spec.name}`, comment, this.lriMap.comment.toLocal(comment.identifier));
+      console.log(`no need to push comment to ${this.client.getName()}`, comment, this.lriMap.comment.toLocal(comment.identifier));
     }
     console.log('pushComment done', comment.identifier);
   }
