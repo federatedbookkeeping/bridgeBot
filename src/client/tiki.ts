@@ -58,11 +58,22 @@ export class TikiClient extends FetchCachingClient {
     return 'tiki';
   }
   parseWebhookData(data: object): { type: WebhookEventType, item: FetchedItem } {
-    throw new Error('Implement me!');
-    // return {
-    //   type: WebhookEventType.Deleted,
-    //   item: {} as FetchedItem
-    // };
+    // throw new Error('Implement me!');
+    return {
+      type: WebhookEventType.Created,
+      item: {
+        type: 'issue',
+        localIdentifier: data['Item ID'],
+        hintedIdentifier: data['URI'],
+        mintedIdentifier: null,
+        fields: {
+          title: data['Summary'],
+          body: data['Job'],
+          completed: false,
+        },
+        localReferences: {}
+      } as FetchedItem
+    };
   }
 
   async apiCall(args: {
