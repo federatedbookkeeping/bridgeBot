@@ -26,3 +26,4 @@ Configuring your Tiki Tracker:
 * configure URLs like https://dull-chicken-follow.loca.lt/tiki/copy/item/create for list/create/update/delete
 * check the 'Synchronize comments?' checkbox
 * see https://timesheet.dev4.evoludata.com/tiki-tabular-edit?tabularId=16 for an example
+* Go to Tracker 3 -> Properties -> Remote Synchronization and choose the new tabular

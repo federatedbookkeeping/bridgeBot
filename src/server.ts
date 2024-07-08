@@ -53,7 +53,10 @@ export function runWebhook(bridges: Bridge[]) {
               }
             }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('error while processing webhook!');
+        throw e;
+      }
       console.log('awaiting sync promises from webhook, start');
       await Promise.all(promises);
       console.log('awaiting sync promises from webhook, done');
