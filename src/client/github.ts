@@ -95,7 +95,10 @@ export class GitHubClient extends FetchCachingClient {
     }
     return hint + body;
   }
-  parseOriHint(body: string): { hint: string | null, rest: string } {
+  parseOriHint(body: string | null): { hint: string | null, rest: string } {
+    if (body === null) {
+      return { hint: null, rest: '' };
+    }
     if (!body.startsWith(ORI_HINT_PREFIX)) {
       console.log('ORI Hint Prefix not found', body);
       return { hint: null, rest: body };
@@ -110,11 +113,11 @@ export class GitHubClient extends FetchCachingClient {
     console.log('Parsed ORI Hint', result, body);
     return { hint: result, rest: rest.substring(start + ORI_HINT_PREFIX.length) };
   }
-  getOriHint(body: string): string | null {
+  getOriHint(body: string | null): string | null {
     const parsed = this.parseOriHint(body);
     return parsed.hint;
   }
-  removeOriHint(body: string): string {
+  removeOriHint(body: string | null): string {
     const parsed = this.parseOriHint(body);
     return parsed.rest;
   }

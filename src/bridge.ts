@@ -71,9 +71,14 @@ export class Bridge {
   }
   async pushIssue(issue: Issue) {
     if (typeof this.lriMap.issue.toLocal(issue.identifier) === 'undefined') {
+      // throw new Error('why is this issue not in the LRI map?');
+      // TODO: sanity check: if we detect the ORI matches the schema for this tracker,
+      // then arriving here would mean something is wrong.
       console.log(`pushing issue to ${this.client.getName()}`, issue);
       const local = await this.client.createItem(issue);
       console.log('issue created, adding mapping', local, issue.identifier);
+      // TODO: sanity check: if there is already a mapping for local identifier
+      // `local` in the LRI map, then that would mean something is wrong.
       this.lriMap.issue.addMapping({ local, original: issue.identifier });
     } else {
       console.log(`no need to push issue to ${this.client.getName()}`, issue, this.lriMap.issue.toLocal(issue.identifier));
