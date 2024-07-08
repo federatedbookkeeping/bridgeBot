@@ -103,7 +103,8 @@ export class Bridge {
       this.dataStore.add(originalItem);
     });
   }
-  async pushIssue(issue: Issue) {
+  async pushIssue(issue: Issue): Promise<void>  {
+    console.log('pushIssue', issue);
     if (typeof this.lriMap.issue.toLocal(issue.identifier) === "undefined") {
       // throw new Error('why is this issue not in the LRI map?');
       // TODO: sanity check: if we detect the ORI matches the schema for this tracker,
@@ -123,7 +124,8 @@ export class Bridge {
     }
     console.log("pushIssue done", issue.identifier);
   }
-  async pushComment(comment: Comment) {
+  async pushComment(comment: Comment): Promise<void>  {
+    console.log('pushComment', comment);
     if (
       typeof this.lriMap.comment.toLocal(comment.identifier) === "undefined"
     ) {
@@ -166,10 +168,13 @@ export class Bridge {
     }
     console.log("pushComment done", comment.identifier);
   }
-  pushItem(item: Item) {
+  pushItem(item: Item): Promise<void> {
+    console.log('Bridge#pushItem');
     if (item.type === 'issue') {
+      console.log('Bridge#pushItem -> Issue');
       return this.pushIssue(item as Issue);
     } else {
+      console.log('Bridge#pushItem -> Comment');
       return this.pushComment(item as Comment);
     }
   }

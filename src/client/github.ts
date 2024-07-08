@@ -71,6 +71,12 @@ export class GitHubClient extends FetchCachingClient {
           item: this.translateGhItem(data.issue, "issue"),
         };
       }
+      case "closed": {
+        return {
+          type: WebhookEventType.Deleted,
+          item: this.translateGhItem(data.issue, "issue"),
+        };
+      }
       case "created": {
         return {
           type: WebhookEventType.Created,

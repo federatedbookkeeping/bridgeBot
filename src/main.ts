@@ -23,7 +23,7 @@ async function buildBridges(configFile: string, dataStore: DataStore): Promise<B
   });
 }
 
-async function initialSync(): Promise<{ dataStore: DataStore, bridges: Bridge[] }> {
+async function load(dataStore: DataStore, bridges: Bridge[]): Promise<void> {
   try {
     await fsPromises.mkdir('data');
   } catch {
@@ -36,13 +36,13 @@ async function initialSync(): Promise<{ dataStore: DataStore, bridges: Bridge[] 
     await fsPromises.mkdir('data/lri');
   } catch {
   }
-  console.log('starting');
-  const dataStore = new DataStore('./data/store.json');
-  const bridges = await buildBridges(CONFIG_FILE, dataStore);
   console.log('loading data store');
   await dataStore.load();
   console.log('loading all bridges');
   await Promise.all(bridges.map(bridge => bridge.load()));
+}
+
+async function initialSync(dataStore: DataStore, bridges: Bridge[]): Promise<void> {
   console.log('fetching all bridges');
   await Promise.all(bridges.map(bridge => bridge.fetchAll()));
   console.log('pushing all bridges');
@@ -53,12 +53,15 @@ async function initialSync(): Promise<{ dataStore: DataStore, bridges: Bridge[] 
   // console.log(dataStore.items);
   await dataStore.save();
   console.log('initial sync done');
-  return { dataStore, bridges };
 }
 
 async function run() {
-  const { dataStore, bridges } = await initialSync();
-  runWebhook(dataStore, bridges);
+  console.log('starting');
+  const dataStore = new DataStore('./data/store.json');
+  const bridges = await buildBridges(CONFIG_FILE, dataStore);
+  await load(dataStore, bridges);
+  await initialSync(dataStore, bridges);
+  runWebhook(bridges);
 }
 
 // ...
