@@ -154,14 +154,37 @@ export class TikiClient extends FetchCachingClient {
         fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body;
         fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
         fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
+         
+        fields[`ticket`] = `n_kKu2qtvdpsIEILiX5jl6k6YX_t-j4sIrOPR7APyj0`;
+        fields[`mode_wysiwyg`] = '';
+        fields[`mode_normal`] = '';
+        fields[`syntax`] = 'tiki';
+        fields[`ins_28`] = '';
+        fields[`wysiwyg`] = 'n';
+        fields[`ins_29`] = '';
+        fields[`ins_30`] = '';
+        fields[`del_30`] = '';
+        fields[`ins_31`] = 'log it';
+        fields[`ins_32%5B%5D`] = '';
+        fields[`ins_33%5B%5D`] = 'michielbdejong';
+        fields[`ins_33%5B%5D`] = '';
+        fields[`ins_34%5Bobjects%5D`] = '';
+        fields[`skipRefresh`] = '';
+        fields[`refreshMeta`] = '';
+        fields[`refreshObject`] = '';
 
+        const url = this.getApiUrl('issue', undefined);
         const response = await this.apiCall({
-          url: this.getApiUrl('issue', undefined),
+          url,
           method: 'POST',
           user: this.spec.defaultUser,
           body: JSON.stringify(fields)
         });
-        console.log(response);
+        if (response.code === 409) {
+          throw new Error('409 response from the Tiki API');
+        }
+        console.log('Sent', fields, 'To', url, 'Received', response);
+        throw new Error("what is the id?");
         return 'fake-id';
       }
       case 'comment': {
