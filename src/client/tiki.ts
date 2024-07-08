@@ -190,14 +190,14 @@ export class TikiClient extends FetchCachingClient {
         const url = this.getApiUrl('issue-create', undefined);
         // const body = JSON.stringify(fields, null, 2);
         // const body = 'status=o&syntax=tiki&trackerId=4&ins_38=an+edited&ins_39=this+issue+is+now+today&ins_40=&ins_41=https%3A%2F%2Ftimesheet.dev4.evoludata.com%2Fapi%2Ftrackers%2F3%2Fitems%2F687';
-        const body = {
+        const body = JSON.stringify({
           status: 'o',
           syntax: 'tiki',
           trackerId: 4,
           ins_38: 'an edited',
           ins_39: 'this issue is now today',
           ins_40: 'https://timesheet.dev4.evoludata.com/api/trackers/3/items/687'
-        }
+        }, null, 2);
         // const body = 'ticket=n_kKu2qtvdpsIEILiX5jl6k6YX_t-j4sIrOPR7APyj0&ins_38=manual+creation+in+4&ins_39=&ins_40=&ins_41=&trackerId=4&skipRefresh=&refreshMeta=&refreshObject=';
         const response = await this.apiCall({
           url,
