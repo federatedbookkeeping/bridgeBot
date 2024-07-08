@@ -8,6 +8,7 @@ const ORI_HINT_SUFFIX = ` -->\n`;
 
 const DEFAULT_HTTP_HEADERS = {
   Accept: "application/vnd.github+json",
+  "Content-Type": "application/json",
   "X-GitHub-Api-Version": "2022-11-28",
 };
 

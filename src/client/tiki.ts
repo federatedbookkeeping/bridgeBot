@@ -3,7 +3,8 @@ import { FetchCachingClient, FetchedItem, WebhookEventType } from "./client";
 
 
 const DEFAULT_HTTP_HEADERS = {
-  Accept: "application/json"
+  Accept: "application/json",
+  "Content-Type": "application/json"
 };
 
 export type TikiIssue = {
@@ -77,7 +78,7 @@ export class TikiClient extends FetchCachingClient {
       }
       headers["Authorization"] = `Bearer ${this.spec.tokens[args.user]}`;
     }
-    console.log("apiCall", args);
+    console.log("apiCall", args, JSON.stringify(headers, null, 2));
     const fetchResult = await fetch(args.url, {
       method: args.method,
       headers,
@@ -88,7 +89,9 @@ export class TikiClient extends FetchCachingClient {
   }
   getApiUrl(type: string, filter?: { issue: string }): string {
     switch(type) {
-      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}/items`;
+      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}`;
+      // case 'issue-create': return `https://${this.spec.server}/tiki-tracker-insert_item`;
+      case 'issue-create': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}/items`;
       case 'comment': return `https://${this.spec.server}/api/comments?type=trackeritem&objectId=${filter!.issue}`;
     }
     throw new Error(`No API URL found for data type ${type}`);
@@ -165,25 +168,25 @@ export class TikiClient extends FetchCachingClient {
         fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
         fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
          
-        fields[`ticket`] = `n_kKu2qtvdpsIEILiX5jl6k6YX_t-j4sIrOPR7APyj0`;
-        fields[`mode_wysiwyg`] = '';
-        fields[`mode_normal`] = '';
-        fields[`syntax`] = 'tiki';
-        fields[`ins_28`] = '';
-        fields[`wysiwyg`] = 'n';
-        fields[`ins_29`] = '';
-        fields[`ins_30`] = '';
-        fields[`del_30`] = '';
-        fields[`ins_31`] = 'log it';
-        fields[`ins_32%5B%5D`] = '';
-        fields[`ins_33%5B%5D`] = 'michielbdejong';
-        fields[`ins_33%5B%5D`] = '';
-        fields[`ins_34%5Bobjects%5D`] = '';
-        fields[`skipRefresh`] = '';
-        fields[`refreshMeta`] = '';
-        fields[`refreshObject`] = '';
+        // fields[`ticket`] = `n_kKu2qtvdpsIEILiX5jl6k6YX_t-j4sIrOPR7APyj0`;
+        // fields[`mode_wysiwyg`] = '';
+        // fields[`mode_normal`] = '';
+        // fields[`syntax`] = 'tiki';
+        // fields[`ins_28`] = '';
+        // fields[`wysiwyg`] = 'n';
+        // fields[`ins_29`] = '';
+        // fields[`ins_30`] = '';
+        // fields[`del_30`] = '';
+        // fields[`ins_31`] = 'log it';
+        // fields[`ins_32%5B%5D`] = '';
+        // fields[`ins_33%5B%5D`] = 'michielbdejong';
+        // fields[`ins_33%5B%5D`] = '';
+        // fields[`ins_34%5Bobjects%5D`] = '';
+        // fields[`skipRefresh`] = '';
+        // fields[`refreshMeta`] = '';
+        // fields[`refreshObject`] = '';
 
-        const url = this.getApiUrl('issue', undefined);
+        const url = this.getApiUrl('issue-create', undefined);
         const response = await this.apiCall({
           url,
           method: 'POST',
