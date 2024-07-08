@@ -158,50 +158,19 @@ export class TikiClient extends FetchCachingClient {
     console.log('createItem', item.type, item.identifier, item.fields, item.references);
     switch (item.type) {
       case 'issue': {
-        const issueFields = item.fields as { title: string, body: string };
-        // const fields = {
-        //   status: 'o',
-        //   syntax: 'tiki',
-        //   trackerId: this.spec.trackerId,
-        // };
-        // fields[`ins_${this.spec.fieldMapping.Summary.toString()}`] = issueFields.title;
-        // fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body;
-        // fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
-        // fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
-         
-        // fields[`ticket`] = `n_kKu2qtvdpsIEILiX5jl6k6YX_t-j4sIrOPR7APyj0`;
-        // fields[`mode_wysiwyg`] = '';
-        // fields[`mode_normal`] = '';
-        // fields[`syntax`] = 'tiki';
-        // fields[`ins_28`] = '';
-        // fields[`wysiwyg`] = 'n';
-        // fields[`ins_29`] = '';
-        // fields[`ins_30`] = '';
-        // fields[`del_30`] = '';
-        // fields[`ins_31`] = 'log it';
-        // fields[`ins_32%5B%5D`] = '';
-        // fields[`ins_33%5B%5D`] = 'michielbdejong';
-        // fields[`ins_33%5B%5D`] = '';
-        // fields[`ins_34%5Bobjects%5D`] = '';
-        // fields[`skipRefresh`] = '';
-        // fields[`refreshMeta`] = '';
-        // fields[`refreshObject`] = '';
-
         const url = this.getApiUrl('issue-create', undefined);
-        // const body = JSON.stringify(fields, null, 2);
-        // const body = [
-        //   'status=o',
-        //   'syntax=tiki&trackerId=4&ins_38=an+edited&ins_39=this+issue+is+now+today&ins_40=&ins_41=https%3A%2F%2Ftimesheet.dev4.evoludata.com%2Fapi%2Ftrackers%2F3%2Fitems%2F687';
+        const issueFields = item.fields as { title: string, body: string };
         const fields = {
           status: 'o',
           syntax: 'tiki',
-          trackerId: '4',
-          ins_38: 'an edited',
-          ins_39: 'this issue is now today',
-          ins_40: 'https://timesheet.dev4.evoludata.com/api/trackers/3/items/687'
+          trackerId: this.spec.trackerId,
         };
+        fields[`ins_${this.spec.fieldMapping.Summary.toString()}`] = issueFields.title;
+        fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body;
+        fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
+        fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
         const body = Object.keys(fields).map(key  => `${encodeURIComponent(key)}=${encodeURIComponent(fields[key])}`).join('&');
-        // const body = 'ticket=n_kKu2qtvdpsIEILiX5jl6k6YX_t-j4sIrOPR7APyj0&ins_38=manual+creation+in+4&ins_39=&ins_40=&ins_41=&trackerId=4&skipRefresh=&refreshMeta=&refreshObject=';
+
         const response = await this.apiCall({
           url,
           method: 'POST',
@@ -212,8 +181,7 @@ export class TikiClient extends FetchCachingClient {
           throw new Error('409 response from the Tiki API');
         }
         console.log('Sent', body, 'To', url, 'Received', response);
-        throw new Error("what is the id?");
-        return 'fake-id';
+        return response.itemId;
       }
       case 'comment': {
         const commentFields = item.fields as { body: string };
