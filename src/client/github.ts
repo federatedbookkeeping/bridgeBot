@@ -95,22 +95,30 @@ export class GitHubClient extends FetchCachingClient {
     }
     return hint + body;
   }
-  parseOriHint(body: string): string | null {
-    console.log('')
+  parseOriHint(body: string): { hint: string | null, rest: string } {
     if (!body.startsWith(ORI_HINT_PREFIX)) {
       console.log('ORI Hint Prefix not found', body);
-      return null;
+      return { hint: null, rest: body };
     }
     const rest = body.substring(ORI_HINT_PREFIX.length);
     const start = rest.indexOf(ORI_HINT_SUFFIX);
     if (start === -1) {
       console.log(`ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`);
-      return null;
+      return  { hint: null, rest: body };
     }
     const result = rest.substring(0, start);
     console.log('Parsed ORI Hint', result, body);
-    return result;
+    return { hint: result, rest: rest.substring(start + ORI_HINT_PREFIX.length) };
   }
+  getOriHint(body: string): string | null {
+    const parsed = this.parseOriHint(body);
+    return parsed.hint;
+  }
+  removeOriHint(body: string): string {
+    const parsed = this.parseOriHint(body);
+    return parsed.rest;
+  }
+
   toGitHubIssue(issue: Issue) {
     const body = this.ensureOriHint(issue.fields.body, issue.identifier);
     return {
@@ -133,12 +141,12 @@ export class GitHubClient extends FetchCachingClient {
         return {
           type: "issue",
           localIdentifier: ghIssue.number.toString(),
-          hintedIdentifier: this.parseOriHint(ghIssue.body),
+          hintedIdentifier: this.getOriHint(ghIssue.body),
           mintedIdentifier: this.mintOri(type, ghIssue.number.toString()),
           deleted: false,
           fields: {
             title: ghIssue.title,
-            body: ghIssue.body,
+            body: this.removeOriHint(ghIssue.body),
             completed: false,
           },
           localReferences: {}
@@ -152,11 +160,11 @@ export class GitHubClient extends FetchCachingClient {
         return {
           type: "comment",
           localIdentifier: ghComment.id.toString(),
-          hintedIdentifier: this.parseOriHint(ghComment.body),
+          hintedIdentifier: this.getOriHint(ghComment.body),
           mintedIdentifier: this.mintOri(type, ghComment.id.toString(), localReferences),
           deleted: false,
           fields: {
-            body: ghComment.body,
+            body: this.removeOriHint(ghComment.body),
           },
           localReferences,
         } as FetchedItem;
