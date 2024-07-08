@@ -1,21 +1,22 @@
-import { Client, FetchedItem } from "./client/client";
+import { Client, FetchedItem, WebhookEventType } from "./client/client";
 import { DataStore } from "./data";
 import { Issue } from "./model/issue";
 import { Comment, CommentReferences } from "./model/comment";
 import { LriMap } from "./lrimap";
+import { Item } from "./model/Item";
 
 export class Bridge {
   client: Client;
   dataStore: DataStore;
   lriMap: {
-    [type: string]: LriMap
+    [type: string]: LriMap;
   };
   constructor(client: Client, dataStore: DataStore) {
     this.client = client;
     this.dataStore = dataStore;
     this.lriMap = {
       issue: new LriMap(`${this.client.getName()}-issues-lri-map`),
-      comment: new LriMap(`${this.client.getName()}-comments-lri-map`)
+      comment: new LriMap(`${this.client.getName()}-comments-lri-map`),
     };
   }
   getType() {
@@ -24,15 +25,62 @@ export class Bridge {
   getName() {
     return this.client.getName();
   }
+  processWebhook(data: object): { type: WebhookEventType, item: Item } {
+    console.log("parsing in bridge");
+    const parsed = this.client.parseWebhookData(data);
+    console.log(parsed.type, parsed.item);
+    switch (parsed.type) {
+      case WebhookEventType.Created: {
+        const originalItem = this.processIncomingItem(parsed.item);
+        this.dataStore.add(originalItem);
+        return { type: parsed.type, item: originalItem };
+      }
+      case WebhookEventType.Updated: {
+        this.processIncomingItem(parsed.item);
+        return { type: parsed.type, item: {} as Item };
+      }
+      case WebhookEventType.Deleted: {
+        this.processIncomingItem(parsed.item);
+        return { type: parsed.type, item: {} as Item };
+      }
+    }
+  }
   async load() {
     const types = Object.keys(this.lriMap);
-    const promises = types.map(type => this.lriMap[type].load());
+    const promises = types.map((type) => this.lriMap[type].load());
     return Promise.all(promises);
   }
   async save() {
     const types = Object.keys(this.lriMap);
-    const promises = types.map(type => this.lriMap[type].save());
+    const promises = types.map((type) => this.lriMap[type].save());
     return Promise.all(promises);
+  }
+  processIncomingItem(item: FetchedItem): Item {
+    const originalIdentifier = this.lriMap[item.type].toOriginal(item);
+    console.log(
+      "mapping issue",
+      item.localIdentifier,
+      item.hintedIdentifier,
+      item.mintedIdentifier,
+      originalIdentifier
+    );
+    const originalItem: Item = {
+      identifier: originalIdentifier,
+      type: item.type,
+      deleted: false,
+      fields: item.fields,
+      references: {},
+    };
+    if (item.type === "comment") {
+      originalItem.references = {
+        issue: this.lriMap.issue.toOriginal({
+          localIdentifier: (item.localReferences as CommentReferences).issue,
+          hintedIdentifier: null,
+          mintedIdentifier: null,
+        } as FetchedItem),
+      };
+    }
+    return originalItem;
   }
   async fetchAll() {
     const issues: FetchedItem[] = await this.client.getItems("issue");
@@ -46,99 +94,108 @@ export class Bridge {
     });
     await Promise.all(commentFetches);
 
-    issues.map(async (issue) => {
-      const originalIdentifier = this.lriMap.issue.toOriginal(issue);
-      console.log('mapping issue', issue.localIdentifier, issue.hintedIdentifier, issue.mintedIdentifier, originalIdentifier);
-      const originalIssue = {
-        identifier: originalIdentifier,
-        type: issue.type,
-        deleted: false,
-        fields: issue.fields,
-        references: {}
-      }
-      this.dataStore.add(originalIssue);
-      console.log('fetched issue added to store', originalIdentifier);
+    issues.map(issue => {
+      const originalItem = this.processIncomingItem(issue);
+      this.dataStore.add(originalItem);
     });
-    comments.map(async (comment) => {
-      const originalIdentifier = this.lriMap.comment.toOriginal(comment);
-      console.log('mapping comment', comment.localIdentifier, comment.hintedIdentifier, comment.mintedIdentifier, originalIdentifier);
-      const originalComment = {
-        identifier: originalIdentifier,
-        type: comment.type,
-        deleted: false,
-        fields: comment.fields,
-        references: {
-          issue: this.lriMap.issue.toOriginal({ localIdentifier: (comment.localReferences as CommentReferences).issue, hintedIdentifier: null, mintedIdentifier: null } as FetchedItem)
-        }
-      };
-      this.dataStore.add(originalComment);
-      console.log('fetched comment added to store', originalIdentifier);
+    comments.map(comment => {
+      const originalItem = this.processIncomingItem(comment);
+      this.dataStore.add(originalItem);
     });
   }
   async pushIssue(issue: Issue) {
-    if (typeof this.lriMap.issue.toLocal(issue.identifier) === 'undefined') {
+    if (typeof this.lriMap.issue.toLocal(issue.identifier) === "undefined") {
       // throw new Error('why is this issue not in the LRI map?');
       // TODO: sanity check: if we detect the ORI matches the schema for this tracker,
       // then arriving here would mean something is wrong.
       console.log(`pushing issue to ${this.client.getName()}`, issue);
       const local = await this.client.createItem(issue);
-      console.log('issue created, adding mapping', local, issue.identifier);
+      console.log("issue created, adding mapping", local, issue.identifier);
       // TODO: sanity check: if there is already a mapping for local identifier
       // `local` in the LRI map, then that would mean something is wrong.
       this.lriMap.issue.addMapping({ local, original: issue.identifier });
     } else {
-      console.log(`no need to push issue to ${this.client.getName()}`, issue, this.lriMap.issue.toLocal(issue.identifier));
+      console.log(
+        `no need to push issue to ${this.client.getName()}`,
+        issue,
+        this.lriMap.issue.toLocal(issue.identifier)
+      );
     }
-    console.log('pushIssue done', issue.identifier);
+    console.log("pushIssue done", issue.identifier);
   }
   async pushComment(comment: Comment) {
-    if (typeof this.lriMap.comment.toLocal(comment.identifier) === 'undefined') {
-      console.log(`pushing comment to ${this.client.getName()}`, comment)
-      if (typeof this.lriMap.issue.toLocal(comment.references.issue) === 'undefined') {
+    if (
+      typeof this.lriMap.comment.toLocal(comment.identifier) === "undefined"
+    ) {
+      console.log(`pushing comment to ${this.client.getName()}`, comment);
+      if (
+        typeof this.lriMap.issue.toLocal(comment.references.issue) ===
+        "undefined"
+      ) {
         console.error(`Cannot create comment without creating the issue first`);
-        const issue = this.dataStore.getItem('issue', comment.references.issue);
-        if (typeof issue !== 'undefined') {
+        const issue = this.dataStore.getItem("issue", comment.references.issue);
+        if (typeof issue !== "undefined") {
           await this.pushIssue(issue as Issue);
         }
       }
-      if (typeof this.lriMap.issue.toLocal(comment.references.issue) === 'undefined') {
-        throw new Error('tried to push issue before pushing comment but still failed');
+      if (
+        typeof this.lriMap.issue.toLocal(comment.references.issue) ===
+        "undefined"
+      ) {
+        throw new Error(
+          "tried to push issue before pushing comment but still failed"
+        );
       }
-      console.log('pushComment calls createItem');
+      console.log("pushComment calls createItem");
       const local = await this.client.createItem({
-        ... comment,
+        ...comment,
         // original identifier will be used to insert ORI hint.
         // local identifier will get assigned during creation.
         references: {
-          issue: this.lriMap.issue.toLocal(comment.references.issue)
-        }
+          issue: this.lriMap.issue.toLocal(comment.references.issue),
+        },
       });
-      console.log('comment created, adding mapping', local, comment.identifier);
+      console.log("comment created, adding mapping", local, comment.identifier);
       this.lriMap.comment.addMapping({ local, original: comment.identifier });
     } else {
-      console.log(`no need to push comment to ${this.client.getName()}`, comment, this.lriMap.comment.toLocal(comment.identifier));
+      console.log(
+        `no need to push comment to ${this.client.getName()}`,
+        comment,
+        this.lriMap.comment.toLocal(comment.identifier)
+      );
     }
-    console.log('pushComment done', comment.identifier);
+    console.log("pushComment done", comment.identifier);
+  }
+  pushItem(item: Item) {
+    if (item.type === 'issue') {
+      return this.pushIssue(item as Issue);
+    } else {
+      return this.pushComment(item as Comment);
+    }
   }
   async pushAll() {
-    console.log('issue push start');
+    console.log("issue push start");
     // push all issues
-    const issuePromises = this.dataStore.getAllItemsOfType('issue').map(item => {
-      console.log(`Push issue ${item.identifier}`);
-      return this.pushIssue(item as Issue);
-    });
-    console.log('issue push await');
+    const issuePromises = this.dataStore
+      .getAllItemsOfType("issue")
+      .map((item) => {
+        console.log(`Push issue ${item.identifier}`);
+        return this.pushIssue(item as Issue);
+      });
+    console.log("issue push await");
     await Promise.all(issuePromises);
-    console.log('issue push done');
-    
+    console.log("issue push done");
+
     // push all comments
-    console.log('comment push start');
-    const commentPromises = this.dataStore.getAllItemsOfType('comment').map(item => {
-      console.log(`Push comment ${item.identifier}`);
-      return this.pushComment(item as Comment);
-    });
-    console.log('comment push await');
+    console.log("comment push start");
+    const commentPromises = this.dataStore
+      .getAllItemsOfType("comment")
+      .map((item) => {
+        console.log(`Push comment ${item.identifier}`);
+        return this.pushComment(item as Comment);
+      });
+    console.log("comment push await");
     await Promise.all(commentPromises);
-    console.log('comment push done');
+    console.log("comment push done");
   }
 }

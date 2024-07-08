@@ -1,5 +1,5 @@
 import { Item } from "../model/Item";
-import { FetchCachingClient, FetchedItem } from "./client";
+import { FetchCachingClient, FetchedItem, WebhookEventType } from "./client";
 
 
 const DEFAULT_HTTP_HEADERS = {
@@ -54,6 +54,13 @@ export class TikiClient extends FetchCachingClient {
   }
   getType(): string {
     return 'tiki';
+  }
+  parseWebhookData(data: object): { type: WebhookEventType, item: FetchedItem } {
+    throw new Error('Implement me!');
+    // return {
+    //   type: WebhookEventType.Deleted,
+    //   item: {} as FetchedItem
+    // };
   }
 
   async apiCall(args: {

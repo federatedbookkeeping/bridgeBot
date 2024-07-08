@@ -1,7 +1,7 @@
 import { Item } from "../model/Item";
 import { Issue } from "../model/issue";
 import { Comment } from "../model/comment";
-import { FetchCachingClient, FetchedItem } from "./client";
+import { FetchCachingClient, FetchedItem, WebhookEventType } from "./client";
 
 const ORI_HINT_PREFIX = `<!-- BridgeBot copy of `;
 const ORI_HINT_SUFFIX = ` -->\n`;
@@ -16,16 +16,16 @@ const REL_API_PATH_ISSUES = `issues`;
 const REL_API_PATH_COMMENTS = `comments`;
 
 export type GitHubIssue = {
-  number: number,
-  title: string,
-  body: string
-}
+  number: number;
+  title: string;
+  body: string;
+};
 
 export type GitHubComment = {
-    id: number,
-    body: string,
-    issue_url: string
-}
+  id: number;
+  body: string;
+  issue_url: string;
+};
 
 export type GitHubClientSpec = {
   // from generic ClientSpec
@@ -39,6 +39,16 @@ export type GitHubClientSpec = {
   repo: string;
 };
 
+export type GitHubWebhookObject = {
+  action: string;
+  issue: GitHubIssue;
+  comment?: GitHubComment;
+  repository: object;
+  sender: {
+    login: string;
+  };
+};
+
 export class GitHubClient extends FetchCachingClient {
   spec: GitHubClientSpec; // overwrites ClientSpec from parent class
   apiUrlIdentifierPrefix: string;
@@ -47,7 +57,59 @@ export class GitHubClient extends FetchCachingClient {
     this.spec = spec;
   }
   getType(): string {
-    return 'github';
+    return "github";
+  }
+  parseWebhookData(data: GitHubWebhookObject): {
+    type: WebhookEventType;
+    item: FetchedItem;
+  } {
+    console.log("parsing in client");
+    switch (data.action) {
+      case "opened": {
+        return {
+          type: WebhookEventType.Created,
+          item: this.translateGhItem(data.issue, "issue"),
+        };
+      }
+      case "created": {
+        return {
+          type: WebhookEventType.Created,
+          item: this.translateGhItem(data.comment!, "comment"),
+        };
+      }
+      case "edited": {
+        let item: FetchedItem;
+        if (typeof data.comment === "undefined") {
+          item = this.translateGhItem(data.issue, "issue");
+        } else {
+          item = this.translateGhItem(data.comment!, "comment");
+        }
+        return {
+          type: WebhookEventType.Updated,
+          item,
+        };
+      }
+      case "deleted": {
+        let item: FetchedItem;
+        if (typeof data.comment === "undefined") {
+          item = this.translateGhItem(data.issue, "issue");
+        } else {
+          item = this.translateGhItem(data.comment!, "comment");
+        }
+        return {
+          type: WebhookEventType.Deleted,
+          item,
+        };
+      }
+
+      default: {
+        throw new Error('Could not parse Webhook Body!');
+        // return {
+        //   type: WebhookEventType.Deleted,
+        //   item: {} as FetchedItem,
+        // };
+      }
+    }
   }
 
   async apiCall(args: {
@@ -85,10 +147,13 @@ export class GitHubClient extends FetchCachingClient {
     throw new Error(`No API URL found for data type ${type}`);
   }
   mintOri(type: string, local: string, filter?: { issue: string }): string {
-    switch(type) {
-      case 'issue': return `${this.getApiUrl('issue')}/${local}`;
-      case 'comment': return `${this.getApiUrl('issue')}/comments/${local}`;
-      default: throw new Error(`Don't know how to mint ORI for item type ${type}`);
+    switch (type) {
+      case "issue":
+        return `${this.getApiUrl("issue")}/${local}`;
+      case "comment":
+        return `${this.getApiUrl("issue")}/comments/${local}`;
+      default:
+        throw new Error(`Don't know how to mint ORI for item type ${type}`);
     }
   }
   ensureOriHint(body: string, ori: string) {
@@ -98,23 +163,28 @@ export class GitHubClient extends FetchCachingClient {
     }
     return hint + body;
   }
-  parseOriHint(body: string | null): { hint: string | null, rest: string } {
+  parseOriHint(body: string | null): { hint: string | null; rest: string } {
     if (body === null) {
-      return { hint: null, rest: '' };
+      return { hint: null, rest: "" };
     }
     if (!body.startsWith(ORI_HINT_PREFIX)) {
-      console.log('ORI Hint Prefix not found', body);
+      console.log("ORI Hint Prefix not found", body);
       return { hint: null, rest: body };
     }
     const rest = body.substring(ORI_HINT_PREFIX.length);
     const start = rest.indexOf(ORI_HINT_SUFFIX);
     if (start === -1) {
-      console.log(`ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`);
-      return  { hint: null, rest: body };
+      console.log(
+        `ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`
+      );
+      return { hint: null, rest: body };
     }
     const result = rest.substring(0, start);
-    console.log('Parsed ORI Hint', result, body);
-    return { hint: result, rest: rest.substring(start + ORI_HINT_PREFIX.length) };
+    console.log("Parsed ORI Hint", result, body);
+    return {
+      hint: result,
+      rest: rest.substring(start + ORI_HINT_PREFIX.length),
+    };
   }
   getOriHint(body: string | null): string | null {
     const parsed = this.parseOriHint(body);
@@ -142,7 +212,7 @@ export class GitHubClient extends FetchCachingClient {
   translateGhItem(item: object, type: string): FetchedItem {
     // console.log('translating', item, type);
     switch (type) {
-      case "issue":
+      case "issue": {
         const ghIssue = item as GitHubIssue;
         return {
           type: "issue",
@@ -155,26 +225,30 @@ export class GitHubClient extends FetchCachingClient {
             body: this.removeOriHint(ghIssue.body),
             completed: false,
           },
-          localReferences: {}
+          localReferences: {},
         } as FetchedItem;
-        break;
-      case "comment":
+      }
+      case "comment": {
         const ghComment = item as GitHubComment;
         const localReferences = {
-          issue: ghComment.issue_url.split("/").slice(-1)[0]
+          issue: ghComment.issue_url.split("/").slice(-1)[0],
         };
         return {
           type: "comment",
           localIdentifier: ghComment.id.toString(),
           hintedIdentifier: this.getOriHint(ghComment.body),
-          mintedIdentifier: this.mintOri(type, ghComment.id.toString(), localReferences),
+          mintedIdentifier: this.mintOri(
+            type,
+            ghComment.id.toString(),
+            localReferences
+          ),
           deleted: false,
           fields: {
             body: this.removeOriHint(ghComment.body),
           },
           localReferences,
         } as FetchedItem;
-        break;
+      }
     }
     throw new Error("cannot translate");
   }
@@ -203,7 +277,7 @@ export class GitHubClient extends FetchCachingClient {
       body: JSON.stringify(data, null, 2),
     };
     const response = (await this.apiCall(args)) as { id: number };
-    console.log('remoteCreate response', response);
+    console.log("remoteCreate response", response);
     return response.id.toString();
   }
 
@@ -211,24 +285,24 @@ export class GitHubClient extends FetchCachingClient {
     switch (item.type) {
       case "issue": {
         const issue = item as Issue;
-        console.log('createItem awaits remoteCreate for issue');
+        console.log("createItem awaits remoteCreate for issue");
         const result = await this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("issue"),
           this.toGitHubIssue(issue)
         );
-        console.log('createItem result for issue', result);
+        console.log("createItem result for issue", result);
         return result;
       }
       case "comment": {
         const comment = item as Comment;
-        console.log('createItem awaits remoteCreate for comment', comment);
+        console.log("createItem awaits remoteCreate for comment", comment);
         const result = await this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("comment", item.references as { issue: string }),
           this.toGitHubComment(comment)
         );
-        console.log('createItem result for comment', result);
+        console.log("createItem result for comment", result);
         return result;
       }
       default:

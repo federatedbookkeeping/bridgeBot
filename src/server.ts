@@ -1,4 +1,5 @@
 import { Bridge } from "./bridge";
+import { WebhookEventType } from "./client/client";
 import { DataStore } from "./data";
 
 const { createServer } = require("http");
@@ -18,17 +19,34 @@ export function runWebhook(dataStore: DataStore, bridges: Bridge[]) {
     });
     req.on("end", function () {
       try {
-        body = JSON.stringify(JSON.parse(body), null, 2);
+        const data = JSON.parse(body);
+        body = JSON.stringify(data, null, 2);
+        console.log("Body", body);
         const parts = req.url.split('/');
         if (parts.length === 3) {
             for (let i=0; i < bridges.length; i++) {
                 if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
                   console.log('bridge found!', parts[1], parts[2]);
-                }
+                  const parsed = bridges[i].processWebhook(data);
+                  switch (parsed.type) {
+                    case WebhookEventType.Created: {
+                      for (let j=0; j < bridges.length; j++) {
+                        if (j !== i) {
+                          this.bridges[j].pushItem(parsed.item);
+                        }
+                      }
+                    }
+                    break;
+                    case WebhookEventType.Updated: {
+                    }
+                    break;
+                    case WebhookEventType.Deleted: {
+                    }
+                  }
+                              }
             }
         }
       } catch (e) {}
-      console.log("Body", body);
       res.end('{ "happy": true }\n');
     });
   }).listen(port);

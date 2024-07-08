@@ -3,6 +3,12 @@ import { Item } from "../model/Item.js";
 
 const CLIENT_DATA_ROOT = 'data/client';
 
+export enum WebhookEventType {
+  Created,
+  Updated,
+  Deleted
+}
+
 export type FetchedItem = {
   type: string,
   localIdentifier: string,
@@ -20,6 +26,7 @@ export type ClientSpec = {
 export abstract class Client {
   abstract getType(): string;
   abstract getName(): string;
+  abstract parseWebhookData(data: object): { type: WebhookEventType, item: FetchedItem };
   abstract getItems(type: string, filter?: { issue: string }): Promise<any>;
   abstract createItem(item: Item): Promise<string>;
   abstract updateItem(type: string, id: string, fields: object, references: object): Promise<void>;
