@@ -3,9 +3,6 @@ import { Issue } from "../model/issue";
 import { Comment } from "../model/comment";
 import { FetchCachingClient, FetchedItem, WebhookEventType } from "./client";
 
-const ORI_HINT_PREFIX = `<!-- BridgeBot copy of `;
-const ORI_HINT_SUFFIX = ` -->\n`;
-
 const DEFAULT_HTTP_HEADERS = {
   Accept: "application/vnd.github+json",
   "Content-Type": "application/json",
@@ -162,44 +159,6 @@ export class GitHubClient extends FetchCachingClient {
       default:
         throw new Error(`Don't know how to mint ORI for item type ${type}`);
     }
-  }
-  ensureOriHint(body: string, ori: string) {
-    const hint = ORI_HINT_PREFIX + ori + ORI_HINT_SUFFIX;
-    if (body.startsWith(hint)) {
-      return body;
-    }
-    return hint + body;
-  }
-  parseOriHint(body: string | null): { hint: string | null; rest: string } {
-    if (body === null) {
-      return { hint: null, rest: "" };
-    }
-    if (!body.startsWith(ORI_HINT_PREFIX)) {
-      console.log("ORI Hint Prefix not found", body);
-      return { hint: null, rest: body };
-    }
-    const rest = body.substring(ORI_HINT_PREFIX.length);
-    const start = rest.indexOf(ORI_HINT_SUFFIX);
-    if (start === -1) {
-      console.log(
-        `ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`
-      );
-      return { hint: null, rest: body };
-    }
-    const result = rest.substring(0, start);
-    console.log("Parsed ORI Hint", result, body);
-    return {
-      hint: result,
-      rest: rest.substring(start + ORI_HINT_PREFIX.length),
-    };
-  }
-  getOriHint(body: string | null): string | null {
-    const parsed = this.parseOriHint(body);
-    return parsed.hint;
-  }
-  removeOriHint(body: string | null): string {
-    const parsed = this.parseOriHint(body);
-    return parsed.rest;
   }
 
   toGitHubIssue(issue: Issue) {

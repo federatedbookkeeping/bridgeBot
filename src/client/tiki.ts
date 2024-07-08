@@ -176,10 +176,10 @@ export class TikiClient extends FetchCachingClient {
           syntax: 'tiki',
           trackerId: this.spec.trackerId,
         };
-        fields[`ins_${this.spec.fieldMapping.Summary.toString()}`] = issueFields.title;
-        fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body;
-        fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
-        fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
+        fields[`ins_${this.spec.fieldMapping.Summary.toString()}`] = issueFields.title || 'title';
+        fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body || 'body';
+        fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '' || 'job';
+        fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier || 'URL';
         const body = Object.keys(fields).map(key  => `${encodeURIComponent(key)}=${encodeURIComponent(fields[key])}`).join('&');
 
         const response = await this.apiCall({
@@ -188,15 +188,17 @@ export class TikiClient extends FetchCachingClient {
           user: this.spec.defaultUser,
           body
         });
-        if (response.code === 409) {
-          throw new Error('409 response from the Tiki API');
+        if ([400, 404, 409].indexOf(response.code) !== -1) {
+          throw new Error(`${response.code} response from the Tiki API`);
         }
         console.log('Sent', body, 'To', url, 'Received', response);
         return response.itemId;
       }
       case 'comment': {
         const url = this.getApiUrl('comment-create', undefined);
-        const commentFields = item.fields as { body: string };
+        const commentFields = {
+          body: this.ensureOriHint((item.fields as { body: string }).body, item.identifier)
+        };
         const commentReferences = item.references as { issue: string };
         const fields = {
           type: 'trackeritem',
