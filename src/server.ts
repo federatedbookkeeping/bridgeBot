@@ -19,9 +19,13 @@ export function runWebhook(dataStore: DataStore, bridges: Bridge[]) {
     req.on("end", function () {
       try {
         body = JSON.stringify(JSON.parse(body), null, 2);
-        switch (req.url) {
-          case "/github/upstream":
-            console.log();
+        const parts = req.url.split('/');
+        if (parts.length === 3) {
+            for (let i=0; i < bridges.length; i++) {
+                if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
+                  console.log('bridge found!', parts[1], parts[2]);
+                }
+            }
         }
       } catch (e) {}
       console.log("Body", body);

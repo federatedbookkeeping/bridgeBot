@@ -46,6 +46,9 @@ export class GitHubClient extends FetchCachingClient {
     super(spec);
     this.spec = spec;
   }
+  getType(): string {
+    return 'github';
+  }
 
   async apiCall(args: {
     url: string;

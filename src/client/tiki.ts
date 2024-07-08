@@ -52,6 +52,9 @@ export class TikiClient extends FetchCachingClient {
     super(spec);
     this.spec = spec;
   }
+  getType(): string {
+    return 'tiki';
+  }
 
   async apiCall(args: {
     url: string;

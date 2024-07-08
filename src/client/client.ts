@@ -18,6 +18,7 @@ export type ClientSpec = {
 };
 
 export abstract class Client {
+  abstract getType(): string;
   abstract getName(): string;
   abstract getItems(type: string, filter?: { issue: string }): Promise<any>;
   abstract createItem(item: Item): Promise<string>;

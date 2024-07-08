@@ -18,6 +18,12 @@ export class Bridge {
       comment: new LriMap(`${this.client.getName()}-comments-lri-map`)
     };
   }
+  getType() {
+    return this.client.getType();
+  }
+  getName() {
+    return this.client.getName();
+  }
   async load() {
     const types = Object.keys(this.lriMap);
     const promises = types.map(type => this.lriMap[type].load());
