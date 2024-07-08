@@ -78,7 +78,7 @@ export class TikiClient extends FetchCachingClient {
   }
   getApiUrl(type: string, filter?: { issue: string }): string {
     switch(type) {
-      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}`;
+      case 'issue': return `https://${this.spec.server}/api/trackers/${this.spec.trackerId}/items`;
       case 'comment': return `https://${this.spec.server}/api/comments?type=trackeritem&objectId=${filter!.issue}`;
     }
     throw new Error(`No API URL found for data type ${type}`);

@@ -3,6 +3,7 @@ import { DataStore } from "./data.js";
 import { Bridge } from "./bridge.js";
 import { GitHubClient } from "./client/github.js";
 import { TikiClient } from "./client/tiki.js";
+import { runWebhook } from "./server.js";
 
 const CONFIG_FILE = 'config.json';
 
@@ -22,7 +23,7 @@ async function buildBridges(configFile: string, dataStore: DataStore): Promise<B
   });
 }
 
-async function run(): Promise<void> {
+async function initialSync(): Promise<{ dataStore: DataStore, bridges: Bridge[] }> {
   try {
     await fsPromises.mkdir('data');
   } catch {
@@ -51,8 +52,15 @@ async function run(): Promise<void> {
   console.log('saving data store');
   // console.log(dataStore.items);
   await dataStore.save();
-  console.log('done');
+  console.log('initial sync done');
+  return { dataStore, bridges };
+}
+
+async function run() {
+  const { dataStore, bridges } = await initialSync();
+  runWebhook(dataStore, bridges);
 }
 
 // ...
 run();
+

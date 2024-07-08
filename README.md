@@ -9,5 +9,10 @@ cp config.example.json config.json
 # and credentials for accessing their APIs
 npm run sync
 ```
-
-Also, on https://taskifier.heroku.com we're setting up ./server.js which will process webhook calls
+In a separate window:
+```
+$ npm install -g localtunnel
+$ lt --port 8000
+your url is: https://grumpy-cobras-sniff.loca.lt
+```
+And then on configure webhooks `https://grumpy-cobras-sniff.loca.lt/{type}/{name}` to match your config.json
