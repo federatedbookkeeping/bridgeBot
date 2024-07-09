@@ -62,6 +62,8 @@ export class TikiClient extends FetchCachingClient {
   constructor(spec: TikiClientSpec) {
     super(spec);
     this.spec = spec;
+    this.oriHintPrefix =`~hc~ BridgeBot copy of `;
+    this.oriHintSuffix = ` ~hc~\n`;
   }
   getType(): string {
     return 'tiki';

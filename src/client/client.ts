@@ -1,8 +1,6 @@
 const fsPromises = require("fs/promises");
 import { Item } from "../model/Item.js";
 
-const ORI_HINT_PREFIX = `<!-- BridgeBot copy of `;
-const ORI_HINT_SUFFIX = ` -->\n`;
 const CLIENT_DATA_ROOT = 'data/client';
 
 export enum WebhookEventType {
@@ -37,6 +35,8 @@ export abstract class Client {
 }
 
 export abstract class FetchCachingClient extends Client {
+  oriHintPrefix: string;
+  oriHintSuffix: string;
   spec: ClientSpec; // overwritten in child classes
   constructor(spec: ClientSpec) {
     super();
@@ -83,7 +83,7 @@ export abstract class FetchCachingClient extends Client {
   abstract getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<object>;
 
   ensureOriHint(body: string, ori: string) {
-    const hint = ORI_HINT_PREFIX + ori + ORI_HINT_SUFFIX;
+    const hint = this.oriHintPrefix + ori + this.oriHintSuffix;
     if (body.startsWith(hint)) {
       return body;
     }
@@ -93,12 +93,12 @@ export abstract class FetchCachingClient extends Client {
     if (body === null) {
       return { hint: null, rest: "" };
     }
-    if (!body.startsWith(ORI_HINT_PREFIX)) {
+    if (!body.startsWith(this.oriHintPrefix)) {
       console.log("ORI Hint Prefix not found", body);
       return { hint: null, rest: body };
     }
-    const rest = body.substring(ORI_HINT_PREFIX.length);
-    const start = rest.indexOf(ORI_HINT_SUFFIX);
+    const rest = body.substring(this.oriHintPrefix.length);
+    const start = rest.indexOf(this.oriHintSuffix);
     if (start === -1) {
       console.log(
         `ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`
@@ -109,7 +109,7 @@ export abstract class FetchCachingClient extends Client {
     console.log("Parsed ORI Hint", result, body);
     return {
       hint: result,
-      rest: rest.substring(start + ORI_HINT_PREFIX.length),
+      rest: rest.substring(start + this.oriHintPrefix.length),
     };
   }
   getOriHint(body: string | null): string | null {

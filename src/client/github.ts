@@ -53,6 +53,8 @@ export class GitHubClient extends FetchCachingClient {
   constructor(spec: GitHubClientSpec) {
     super(spec);
     this.spec = spec;
+    this.oriHintPrefix =`<!-- BridgeBot copy of `;
+    this.oriHintSuffix = ` -->\n`;
   }
   getType(): string {
     return "github";
