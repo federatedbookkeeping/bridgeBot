@@ -4,7 +4,7 @@
     "name": "upstream",
     "repo": "federatedbookkeeping/github-dxos",
     "tokens": {
-      "michielbdejong": "github_pat_11A..."
+      "michielbdejong": "github_pat_11AA..."
     },
     "defaultUser": "michielbdejong"
   },
@@ -23,7 +23,7 @@
     "server": "timesheet.dev4.evoludata.com",
     "trackerId": "3",
     "tokens": {
-      "michielbdejong": "3a40a4..."
+      "michielbdejong": "3a40a49..."
     },
     "fieldPrefix": "task",
     "fieldMapping": {
@@ -31,6 +31,14 @@
       "Description": 28,
       "Job": 31,
       "URI": 37
+    },
+    "webhookFieldMapping": {
+      "issueTitle": "Summary",
+      "issueBody": "Job",
+      "issueUri": "URI",
+      "commentBody": "content",
+      "commentId": "message_id",
+      "commentIssueId": "object"
     },
     "defaultUser": "michielbdejong"
   },
@@ -40,7 +48,7 @@
     "server": "timesheet.dev4.evoludata.com",
     "trackerId": "4",
     "tokens": {
-      "michielbdejong": "3a40a4..."
+      "michielbdejong": "3a40a49..."
     },
     "fieldPrefix": "copyoftaskTask",
     "fieldMapping": {
@@ -48,6 +56,14 @@
       "Description": 39,
       "Job": 40,
       "URI": 41
+    },
+    "webhookFieldMapping": {
+      "issueTitle": "summary",
+      "issueBody": "description",
+      "issueUri": "URI",
+      "commentBody": "content",
+      "commentId": "message_id",
+      "commentIssueId": "object"
     },
     "defaultUser": "michielbdejong"
   }

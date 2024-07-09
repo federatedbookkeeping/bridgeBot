@@ -61,7 +61,7 @@ async function run() {
   const bridges = await buildBridges(CONFIG_FILE, dataStore);
   console.log('runWebhook start');
   runWebhook(bridges);
-  console.log('runWebhook done');
+  console.log('Webhook running');
   await load(dataStore, bridges);
   await initialSync(dataStore, bridges);
 }
