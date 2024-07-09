@@ -137,7 +137,7 @@ export class Bridge {
         console.error(`Cannot create comment without creating the issue first`);
         const issue = this.dataStore.getItem("issue", comment.references.issue);
         if (typeof issue !== "undefined") {
-          await this.pushIssue(issue as Issue);
+          await this.pushItem(issue as Item);
         }
       }
       if (
@@ -168,8 +168,12 @@ export class Bridge {
     }
     console.log("pushComment done", comment.identifier);
   }
-  pushItem(item: Item): Promise<void> {
+  async pushItem(item: Item): Promise<void> {
     console.log('Bridge#pushItem');
+    if (this.lriMap[item.type].toLocal(item.identifier)) {
+      console.log('already have this item', item.identifier);
+      return;
+    }
     if (item.type === 'issue') {
       console.log('Bridge#pushItem -> Issue');
       return this.pushIssue(item as Issue);
@@ -185,7 +189,7 @@ export class Bridge {
       .getAllItemsOfType("issue")
       .map((item) => {
         console.log(`Push issue ${item.identifier}`);
-        return this.pushIssue(item as Issue);
+        return this.pushItem(item);
       });
     console.log("issue push await");
     await Promise.all(issuePromises);
@@ -197,7 +201,7 @@ export class Bridge {
       .getAllItemsOfType("comment")
       .map((item) => {
         console.log(`Push comment ${item.identifier}`);
-        return this.pushComment(item as Comment);
+        return this.pushItem(item);
       });
     console.log("comment push await");
     await Promise.all(commentPromises);
