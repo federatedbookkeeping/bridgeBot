@@ -181,6 +181,8 @@ export class TikiClient extends FetchCachingClient {
           },
           localReferences: {},
         };
+        console.log('Tiki Client translated fetched issue', ret);
+        return ret;
       }
       case 'comment': {
         const ttComment = item as TikiComment;
