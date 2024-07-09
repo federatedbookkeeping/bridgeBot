@@ -46,7 +46,7 @@ export class LriMap {
     const original = this.determineOriginal(item.localIdentifier, item.hintedIdentifier, item.mintedIdentifier);
     this.map.toOriginal[item.localIdentifier] = original;
     this.map.toLocal[original] = item.localIdentifier;
-    console.log('toOriginal calls checkOriFromHint', item.localIdentifier, item.hintedIdentifier, item.mintedIdentifier, original);
+    console.log('toOriginal calls checkOriFromHint', { local:item.localIdentifier, hinted: item.hintedIdentifier, minted: item.mintedIdentifier, original });
     this.checkOriFromHint(item.localIdentifier, item.hintedIdentifier, original);
     return original;
   }

@@ -39,6 +39,10 @@ export function runWebhook(bridges: Bridge[]) {
                     console.log('for loop i j', i, j);
                     if (j !== i) {
                       console.log(`pushing creation from ${bridges[i].getName()} to ${bridges[j].getName()}`);
+                      if (typeof parsed.item.identifier !== 'string' || parsed.item.identifier === '') {
+                        throw new Error('cannot create item without identifier');
+                      }
+                  
                       promises.push(bridges[j].pushItem(parsed.item));
                     }
                   }

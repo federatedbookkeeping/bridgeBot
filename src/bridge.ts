@@ -137,6 +137,9 @@ export class Bridge {
         console.error(`Cannot create comment without creating the issue first`);
         const issue = this.dataStore.getItem("issue", comment.references.issue);
         if (typeof issue !== "undefined") {
+          if (typeof issue.identifier !== 'string' || issue.identifier === '') {
+            throw new Error('cannot create item without identifier');
+          }      
           await this.pushItem(issue as Item);
         }
       }
@@ -169,6 +172,9 @@ export class Bridge {
     console.log("pushComment done", comment.identifier);
   }
   async pushItem(item: Item): Promise<void> {
+    if (typeof item.identifier !== 'string' || item.identifier === '') {
+      throw new Error('cannot create item without identifier');
+    }
     console.log('Bridge#pushItem');
     const hinted = this.client.getOriHint((item.fields as { body: string }).body);
     if (typeof hinted !== null && this.lriMap[item.type].toLocal(hinted!)) {
@@ -194,6 +200,9 @@ export class Bridge {
       .getAllItemsOfType("issue")
       .map((item) => {
         console.log(`Push issue ${item.identifier}`);
+        if (typeof item.identifier !== 'string' || item.identifier === '') {
+          throw new Error('cannot create item without identifier');
+        }    
         return this.pushItem(item);
       });
     console.log("issue push await");
@@ -206,6 +215,9 @@ export class Bridge {
       .getAllItemsOfType("comment")
       .map((item) => {
         console.log(`Push comment ${item.identifier}`);
+        if (typeof item.identifier !== 'string' || item.identifier === '') {
+          throw new Error('cannot create item without identifier');
+        }    
         return this.pushItem(item);
       });
     console.log("comment push await");
