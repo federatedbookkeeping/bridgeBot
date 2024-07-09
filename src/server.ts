@@ -24,7 +24,7 @@ export function runWebhook(bridges: Bridge[]) {
         body = JSON.stringify(data, null, 2);
         console.log("Body", body);
         const parts = req.url.split('/');
-        if (parts.length === 3) {
+        if (parts.length >= 3) {
           for (let i=0; i < bridges.length; i++) {
             console.log('for loop i', i, parts, bridges[i].getType(), bridges[i].getName());
               if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
