@@ -235,7 +235,7 @@ export class TikiClient extends FetchCachingClient {
         };
         fields[`ins_${this.spec.fieldMapping.Summary.toString()}`] = issueFields.title || 'title';
         fields[`ins_${this.spec.fieldMapping.Description.toString()}`] = issueFields.body || 'body';
-        fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = '';
+        fields[`ins_${this.spec.fieldMapping.Job.toString()}`] = 'job';
         fields[`ins_${this.spec.fieldMapping.URI.toString()}`] = item.identifier;
         const body = Object.keys(fields).map(key  => `${encodeURIComponent(key)}=${encodeURIComponent(fields[key])}`).join('&');
 
