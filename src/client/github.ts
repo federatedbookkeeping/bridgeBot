@@ -132,7 +132,7 @@ export class GitHubClient extends FetchCachingClient {
       }
       headers["Authorization"] = `Bearer ${this.spec.tokens[args.user]}`;
     }
-    console.log("apiCall", args);
+    // console.log("apiCall", args);
     const fetchResult = await fetch(args.url, {
       method: args.method,
       headers,

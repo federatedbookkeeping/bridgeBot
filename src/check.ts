@@ -1,13 +1,32 @@
 const fsPromises = require("fs/promises");
-import { DataStore } from "./data.js";
-import { Bridge } from "./bridge.js";
 import { GitHubClient } from "./client/github.js";
 import { TikiClient } from "./client/tiki.js";
-import { runWebhook } from "./server.js";
 import { Client, FetchedComment, FetchedIssue, FetchedItem } from "./client/client.js";
-import { Issue } from "./model/issue.js";
+const { createServer } = require("http");
 
+const port = process.env.PORT || 8000;
 const CONFIG_FILE = 'config.json';
+
+function runWebhook(cb: (url: string, body: string) => void) {
+  createServer((req, res) => {
+    console.log("processing", req.url, req.method, JSON.stringify(req.headers));
+    let body = "";
+    req.on("data", function (data) {
+      body += data;
+
+      // Too much POST data, kill the connection!
+      // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+      if (body.length > 1e6) {
+        req.connection.destroy();
+      }
+    });
+    req.on("end", async function () {
+      cb(req.url, body);
+      res.end('{ "happy": true }\n');
+    });
+  }).listen(port);
+  console.log("listening on port", port);
+}
 
 async function buildClients(configFile: string): Promise<Client[]> {
   const buff = await fsPromises.readFile(configFile);
@@ -55,11 +74,58 @@ function checkFetchedItem(declaredType: string, fetchedItem: FetchedItem) {
 async function run() {
   console.log('starting');
   const clients = await buildClients(CONFIG_FILE);
+  const timestamps: { [index: number]: number } = {};
+  const callbacks: { [index: number]: (value: unknown) => void } = {};
+  runWebhook((url: string, body: string) => {
+    try {
+      const data = JSON.parse(body);
+      body = JSON.stringify(data, null, 2);
+      console.log("Body", body);
+      const parts = url.split('/');
+      if (parts.length >= 3) {
+        let found = false;
+        for (let i=0; i < clients.length; i++) {
+          if (parts[0] === '' && parts[1] === clients[i].getType() && parts[2] === clients[i].getName()) {
+            // console.log('bridge found!', parts[1], parts[2]);
+            found = true;
+            const parsed = clients[i].parseWebhookData(data, parts.slice(3));
+            if (parsed.item.hintedIdentifier === null) {
+              console.log('parsed item hinted identifier is null in webhook callback', parsed);
+            } else {
+              callbacks[parsed.item.hintedIdentifier](parsed);
+            }
+            console.log(parsed);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('error processing webhook', url, body);
+      throw e;
+    }
+  });
   for (let i = 0; i < clients.length; i++) {
     console.log(`Checking client ${i}`, clients[i].getType(), clients[i].getName());
     const issues = await clients[i].getItems('issue');
     for (let j = 0; j < issues.length; j++) {
       checkFetchedItem('issue', issues[j]);
+      const comments = await clients[i].getItems('comment', { issue: issues[j].localIdentifier });
+      for (let j = 0; j < comments.length; j++) {
+        checkFetchedItem('comment', comments[j]);
+      }
+      timestamps[i] = Date.now();
+      const local = await clients[i].createItem({
+        type: 'issue',
+        identifier: `issue-identifier-${i}-${timestamps[i]}`,
+        deleted: false,
+        fields: {
+          title: `issue-title-${i}-${timestamps[i]}`,
+          body: `issue-body-${i}-${timestamps[i]}`,
+          completed: false
+        },
+        references: {}
+      });
+      const loopback = await new Promise(cb => { callbacks[`issue-identifier-${i}-${timestamps[i]}`] = cb; });
+      console.log('created', local, loopback);
     }
   }
   console.log('Checks completed');
