@@ -84,7 +84,7 @@ export class TikiClient extends FetchCachingClient {
       update: WebhookEventType.Updated,
       delete: WebhookEventType.Deleted
     }
-    console.log('Tiki Client parsing webhook', data, urlParts, this.spec.webhookFieldMapping);
+    // console.log('Tiki Client parsing webhook', data, urlParts, this.spec.webhookFieldMapping);
     let ret;
     if (urlParts[0] === 'comment') {
       ret = {
@@ -123,7 +123,7 @@ export class TikiClient extends FetchCachingClient {
     if (ret.item.hintedIdentifier === '') {
       ret.item.hintedIdentifier = null;
     }
-    console.log('Tiki Client parsed webhook', ret);
+    // console.log('Tiki Client parsed webhook', ret);
     return ret;
   }
 
@@ -141,7 +141,7 @@ export class TikiClient extends FetchCachingClient {
       }
       headers["Authorization"] = `Bearer ${this.spec.tokens[args.user]}`;
     }
-    console.log("apiCall", args, JSON.stringify(headers, null, 2));
+    // console.log("apiCall", args, JSON.stringify(headers, null, 2));
     const fetchResult = await fetch(args.url, {
       method: args.method,
       headers,
@@ -164,7 +164,7 @@ export class TikiClient extends FetchCachingClient {
     switch(type) {
       case 'issue': {
         const ttItem = item as TikiIssue;
-        console.log("extracting identifiers and fields from ttItem", ttItem);
+        // console.log("extracting identifiers and fields from ttItem", ttItem);
         const localIdentifier = ttItem.itemId.toString();
         const mintedIdentifier = this.mintOri('issue', localIdentifier);
         let hintedIdentifier = ttItem.fields[`${this.spec.fieldPrefix}URI`];
@@ -183,12 +183,12 @@ export class TikiClient extends FetchCachingClient {
           },
           localReferences: {},
         };
-        console.log('Tiki Client translated fetched issue', ret);
+        // console.log('Tiki Client translated fetched issue', ret);
         return ret;
       }
       case 'comment': {
         const ttComment = item as TikiComment;
-        console.log("extracting identifiers, fields and issue reference from ttComment", ttComment);
+        // console.log("extracting identifiers, fields and issue reference from ttComment", ttComment);
         return {
           type: 'comment',
           localIdentifier: ttComment.message_id,
@@ -225,7 +225,7 @@ export class TikiClient extends FetchCachingClient {
   }
 
   async createItem(item: Item): Promise<string> {
-    console.log('createItem', item.type, item.identifier, item.fields, item.references);
+    // console.log('createItem', item.type, item.identifier, item.fields, item.references);
     switch (item.type) {
       case 'issue': {
         const url = this.getApiUrl('issue-create', undefined);
@@ -247,7 +247,7 @@ export class TikiClient extends FetchCachingClient {
           user: this.spec.defaultUser,
           body
         });
-        console.log('Sent', body, 'To', url, 'Received', response);
+        // console.log('Sent', body, 'To', url, 'Received', response);
         if ([400, 404, 409].indexOf(response.code) !== -1) {
           throw new Error(`${response.code} response from the Tiki API`);
         }
@@ -273,11 +273,11 @@ export class TikiClient extends FetchCachingClient {
           user: this.spec.defaultUser,
           body
         });
-        console.log(response);
+        // console.log(response);
         if ([404, 409, 1000].indexOf(response.code) !== -1) {
           throw new Error(`${response.code} response from the Tiki API`);
         }
-        console.log('Sent', body, 'To', url, 'Received', response);
+        // console.log('Sent', body, 'To', url, 'Received', response);
         if (typeof response.threadId === 'undefined') {
           throw new Error('Could not extract local identifier from create response!');
         }

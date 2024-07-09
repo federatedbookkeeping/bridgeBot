@@ -74,9 +74,9 @@ export abstract class FetchCachingClient extends Client {
     try {
       const buff = await fsPromises.readFile(filename);
       itemsWireResponse = JSON.parse(buff.toString());
-      console.log(`Loaded ${filename}`);
+      // console.log(`Loaded ${filename}`);
     } catch {
-      console.log(`Failed to load ${filename}, fetching over network`);
+      // console.log(`Failed to load ${filename}, fetching over network`);
       itemsWireResponse = await this.getItemsOverNetwork(type, filter);
       const dirname = this.getDirName();
       try {
@@ -87,7 +87,7 @@ export abstract class FetchCachingClient extends Client {
         filename,
         JSON.stringify(itemsWireResponse, null, 2) + "\n"
       );
-      console.log(`Saved ${filename}`);
+      // console.log(`Saved ${filename}`);
     }
     return this.translateItemsWireResponse(itemsWireResponse, type);
   }
@@ -106,19 +106,19 @@ export abstract class FetchCachingClient extends Client {
       return { hint: null, rest: "" };
     }
     if (!body.startsWith(this.oriHintPrefix)) {
-      console.log("ORI Hint Prefix not found", body);
+      // console.log("ORI Hint Prefix not found", body);
       return { hint: null, rest: body };
     }
     const rest = body.substring(this.oriHintPrefix.length);
     const start = rest.indexOf(this.oriHintSuffix);
     if (start === -1) {
-      console.log(
-        `ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`
-      );
+      // console.log(
+      //   `ORI Hint Suffix not found in body "${body.substring(0, 100)}..."`
+      // );
       return { hint: null, rest: body };
     }
     const result = rest.substring(0, start);
-    console.log("Parsed ORI Hint", result, body);
+    // console.log("Parsed ORI Hint", result, body);
     return {
       hint: result,
       rest: rest.substring(start + this.oriHintPrefix.length),

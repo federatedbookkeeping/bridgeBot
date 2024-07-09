@@ -228,7 +228,7 @@ export class GitHubClient extends FetchCachingClient {
     type: string,
     filter?: { issue: string }
   ): Promise<Item[]> {
-    console.log("GitHubClient#getItemsOverNetwork", type, filter);
+    // console.log("GitHubClient#getItemsOverNetwork", type, filter);
     return this.apiCall({
       url: this.getApiUrl(type, filter),
       method: "GET",
@@ -237,7 +237,7 @@ export class GitHubClient extends FetchCachingClient {
   }
 
   async remoteCreate(user: string, url: string, data: object): Promise<string> {
-    console.log("remoteCreate", user, url);
+    // console.log("remoteCreate", user, url);
     const args = {
       user,
       url,
@@ -245,7 +245,7 @@ export class GitHubClient extends FetchCachingClient {
       body: JSON.stringify(data, null, 2),
     };
     const response = (await this.apiCall(args)) as { id: number };
-    console.log("remoteCreate response", response);
+    // console.log("remoteCreate response", response);
     return response.id.toString();
   }
 
@@ -253,24 +253,24 @@ export class GitHubClient extends FetchCachingClient {
     switch (item.type) {
       case "issue": {
         const issue = item as Issue;
-        console.log("createItem awaits remoteCreate for issue");
+        // console.log("createItem awaits remoteCreate for issue");
         const result = await this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("issue"),
           this.toGitHubIssue(issue)
         );
-        console.log("createItem result for issue", result);
+        // console.log("createItem result for issue", result);
         return result;
       }
       case "comment": {
         const comment = item as Comment;
-        console.log("createItem awaits remoteCreate for comment", comment);
+        // console.log("createItem awaits remoteCreate for comment", comment);
         const result = await this.remoteCreate(
           this.spec.defaultUser,
           this.getApiUrl("comment", item.references as { issue: string }),
           this.toGitHubComment(comment)
         );
-        console.log("createItem result for comment", result);
+        // console.log("createItem result for comment", result);
         return result;
       }
       default:

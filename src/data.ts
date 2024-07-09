@@ -34,13 +34,13 @@ export class DataStore {
     try {
       const buff = await fsPromises.readFile(this.filename);
       this.items = JSON.parse(buff.toString());
-      console.log(`Loaded ${this.filename}`);
+      // console.log(`Loaded ${this.filename}`);
     } catch {
-      console.log(`Failed to load ${this.filename}`);
+      // console.log(`Failed to load ${this.filename}`);
     }
   }
   async save() {
     await fsPromises.writeFile(this.filename, JSON.stringify(this.items, null, 2) + "\n");
-    console.log(`Saved ${this.filename}`);
+    // console.log(`Saved ${this.filename}`);
   }
 }
