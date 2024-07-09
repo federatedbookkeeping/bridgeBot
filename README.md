@@ -28,3 +28,13 @@ Configuring your Tiki Tracker:
 * choose 'Data Format': JSON
 * see https://timesheet.dev4.evoludata.com/tiki-tabular-edit?tabularId=16 for an example
 * Go to Tracker 3 -> Properties -> Remote Synchronization and choose the new tabular
+
+Configuring your Github webhooks:
+* go to e.g. https://github.com/federatedbookkeeping/github-dxos/settings/hooks
+* payload URL https://quick-wolves-rescue.loca.lt/github/tracker-name
+* Content type application/json
+* Let me select individual events
+  * Issues
+  * Issue Comments
+* Active: yes
+* Update webhook
