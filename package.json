@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "start": "node ./server.js",
+    "start": "node dist/start.js",
     "sync": "node dist/main.js",
+    "check": "node dist/check.js",
     "build": "tsc src/*.ts src/*/*.ts --outDir dist/ --lib ES2015",
     "reset": "rm data/lri/* ; rm data/store.json",
     "flush": "rm -rf data/client/*"
