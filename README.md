@@ -7,6 +7,7 @@ npm run build
 cp config.example.json config.json
 # edit the issue trackers you want to federate
 # and credentials for accessing their APIs
+npm run check
 npm run sync
 ```
 In a separate window:
