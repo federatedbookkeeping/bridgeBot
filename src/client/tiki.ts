@@ -46,6 +46,7 @@ export type TikiClientSpec = {
     issueTitle: string,
     issueBody: string,
     issueUri: string,
+    issueId: string,
     commentBody: string,
     commentId: string,
     commentIssueId: string,
@@ -95,7 +96,7 @@ export class TikiClient extends FetchCachingClient {
         type: operationMap[urlParts[1]],
         item: {
           type: 'issue',
-          localIdentifier: itemUriParts[itemUriParts.length -1],
+          localIdentifier: data[this.spec.webhookFieldMapping.issueId],
           hintedIdentifier: data[this.spec.webhookFieldMapping.issueUri],
           mintedIdentifier: null,
           fields: {

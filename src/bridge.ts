@@ -170,6 +170,11 @@ export class Bridge {
   }
   async pushItem(item: Item): Promise<void> {
     console.log('Bridge#pushItem');
+    const hinted = this.client.getOriHint((item.fields as { body: string }).body);
+    if (typeof hinted !== null && this.lriMap[item.type].toLocal(hinted!)) {
+      console.log('already have this item', hinted);
+      return;
+    }
     if (this.lriMap[item.type].toLocal(item.identifier)) {
       console.log('already have this item', item.identifier);
       return;

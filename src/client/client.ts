@@ -33,6 +33,7 @@ export abstract class Client {
   abstract createItem(item: Item): Promise<string>;
   abstract updateItem(type: string, id: string, fields: object, references: object): Promise<void>;
   abstract deleteItem(type: string, id: string): Promise<void>;
+  abstract getOriHint(body: string | null): string | null;
 }
 
 export abstract class FetchCachingClient extends Client {
