@@ -66,6 +66,16 @@ export class TikiClient extends FetchCachingClient {
   getType(): string {
     return 'tiki';
   }
+  mintOri(type: string, local: string, filter?: { issue: string }): string {
+    switch (type) {
+      case "issue":
+        return `https://${this.spec.server}/item${local}`;
+      case "comment":
+        return local;
+      default:
+        throw new Error(`Don't know how to mint ORI for item type ${type}`);
+    }
+  }
   parseWebhookData(data: object, urlParts: string[]): { type: WebhookEventType, item: FetchedItem } {
     const operationMap = {
       create: WebhookEventType.Created,
@@ -81,7 +91,7 @@ export class TikiClient extends FetchCachingClient {
           type: 'comment',
           localIdentifier: (data as { message_id: string }).message_id,
           hintedIdentifier: (data as { message_id: string }).message_id,
-          mintedIdentifier: null,
+          mintedIdentifier: this.mintOri('comment', (data as { message_id: string }).message_id, { issue: (data as { object: string }).object }),
           fields: {
             body: (data as { content: string }).content,
           },
@@ -98,7 +108,7 @@ export class TikiClient extends FetchCachingClient {
           type: 'issue',
           localIdentifier: data[this.spec.webhookFieldMapping.issueId],
           hintedIdentifier: data[this.spec.webhookFieldMapping.issueUri],
-          mintedIdentifier: null,
+          mintedIdentifier: this.mintOri('issue', this.spec.webhookFieldMapping.issueId),
           fields: {
             title: data[this.spec.webhookFieldMapping.issueTitle],
             body: data[this.spec.webhookFieldMapping.issueBody],
