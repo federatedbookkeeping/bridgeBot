@@ -9,7 +9,7 @@ const CONFIG_FILE = 'config.json';
 
 function runWebhook(cb: (url: string, body: string) => void) {
   createServer((req, res) => {
-    console.log("processing", req.url, req.method, JSON.stringify(req.headers));
+    // console.log("processing", req.url, req.method, JSON.stringify(req.headers));
     let body = "";
     req.on("data", function (data) {
       body += data;
@@ -80,7 +80,7 @@ async function run() {
     try {
       const data = JSON.parse(body);
       body = JSON.stringify(data, null, 2);
-      console.log("Body", body);
+      // console.log("Body", body);
       const parts = url.split('/');
       if (parts.length >= 3) {
         let found = false;
@@ -91,10 +91,12 @@ async function run() {
             const parsed = clients[i].parseWebhookData(data, parts.slice(3));
             if (parsed.item.hintedIdentifier === null) {
               console.log('parsed item hinted identifier is null in webhook callback', parsed);
-            } else {
+            } else if (typeof callbacks[parsed.item.hintedIdentifier] === 'function') {
               callbacks[parsed.item.hintedIdentifier](parsed);
+            } else {
+              console.error('unexpected item in webhook', parsed, Object.keys(callbacks), parsed.item.hintedIdentifier, typeof callbacks[parsed.item.hintedIdentifier]);
             }
-            console.log(parsed);
+            // console.log(parsed);
           }
         }
       }

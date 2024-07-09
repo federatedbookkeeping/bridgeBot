@@ -63,7 +63,7 @@ export class GitHubClient extends FetchCachingClient {
     type: WebhookEventType;
     item: FetchedItem;
   } {
-    console.log("parsing in client");
+    // console.log("parsing in client");
     switch (data.action) {
       case "opened": {
         return {
@@ -245,7 +245,7 @@ export class GitHubClient extends FetchCachingClient {
       body: JSON.stringify(data, null, 2),
     };
     const response = (await this.apiCall(args)) as { id: number };
-    // console.log("remoteCreate response", response);
+    console.log("remoteCreate response", response);
     return response.id.toString();
   }
 

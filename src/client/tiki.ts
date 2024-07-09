@@ -102,8 +102,7 @@ export class TikiClient extends FetchCachingClient {
           }
         } as FetchedItem
       };
-    } else { 
-      const itemUriParts = data[this.spec.webhookFieldMapping.issueUri].split('/');
+    } else {
       ret = {
         type: operationMap[urlParts[1]],
         item: {
@@ -123,7 +122,7 @@ export class TikiClient extends FetchCachingClient {
     if (ret.item.hintedIdentifier === '') {
       ret.item.hintedIdentifier = null;
     }
-    // console.log('Tiki Client parsed webhook', ret);
+    console.log('Tiki Client parsed webhook', data, ret);
     return ret;
   }
 
