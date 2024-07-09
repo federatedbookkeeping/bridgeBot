@@ -57,12 +57,18 @@ export class TikiClient extends FetchCachingClient {
   getType(): string {
     return 'tiki';
   }
-  parseWebhookData(data: object): { type: WebhookEventType, item: FetchedItem } {
+  parseWebhookData(data: object, urlParts: string[]): { type: WebhookEventType, item: FetchedItem } {
+    console.log('Tiki Client parsing webhook', data, urlParts);
+    const operationMap = {
+      create: WebhookEventType.Created,
+      update: WebhookEventType.Updated,
+      delete: WebhookEventType.Deleted
+    }
     // throw new Error('Implement me!');
-    return {
-      type: WebhookEventType.Created,
+    const ret = {
+      type: operationMap[urlParts[1]],
       item: {
-        type: 'issue',
+        type: urlParts[0],
         localIdentifier: data['Item ID'],
         hintedIdentifier: data['URI'],
         mintedIdentifier: null,
@@ -74,6 +80,8 @@ export class TikiClient extends FetchCachingClient {
         localReferences: {}
       } as FetchedItem
     };
+    console.log('Tiki Client parsed webhook', ret);
+    return ret;
   }
 
   async apiCall(args: {

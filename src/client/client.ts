@@ -28,7 +28,7 @@ export type ClientSpec = {
 export abstract class Client {
   abstract getType(): string;
   abstract getName(): string;
-  abstract parseWebhookData(data: object): { type: WebhookEventType, item: FetchedItem };
+  abstract parseWebhookData(data: object, urlParts: string[]): { type: WebhookEventType, item: FetchedItem };
   abstract getItems(type: string, filter?: { issue: string }): Promise<any>;
   abstract createItem(item: Item): Promise<string>;
   abstract updateItem(type: string, id: string, fields: object, references: object): Promise<void>;

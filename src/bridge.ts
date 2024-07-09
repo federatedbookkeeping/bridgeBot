@@ -25,9 +25,9 @@ export class Bridge {
   getName() {
     return this.client.getName();
   }
-  processWebhook(data: object): { type: WebhookEventType, item: Item } {
+  processWebhook(data: object, urlParts: string[]): { type: WebhookEventType, item: Item } {
     console.log("parsing in bridge");
-    const parsed = this.client.parseWebhookData(data);
+    const parsed = this.client.parseWebhookData(data, urlParts);
     console.log(parsed.type, parsed.item);
     switch (parsed.type) {
       case WebhookEventType.Created: {

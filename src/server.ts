@@ -29,7 +29,7 @@ export function runWebhook(bridges: Bridge[]) {
             console.log('for loop i', i, parts, bridges[i].getType(), bridges[i].getName());
               if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
                 console.log('bridge found!', parts[1], parts[2]);
-                const parsed = bridges[i].processWebhook(data);
+                const parsed = bridges[i].processWebhook(data, parts.slice(3));
                 switch (parsed.type) {
                   case WebhookEventType.Created: {
                     console.log('webhook event parsed as creation', parsed.item);
