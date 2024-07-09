@@ -108,7 +108,7 @@ export class TikiClient extends FetchCachingClient {
           type: 'issue',
           localIdentifier: data[this.spec.webhookFieldMapping.issueId],
           hintedIdentifier: data[this.spec.webhookFieldMapping.issueUri],
-          mintedIdentifier: this.mintOri('issue', this.spec.webhookFieldMapping.issueId),
+          mintedIdentifier: this.mintOri('issue', data[this.spec.webhookFieldMapping.issueId]),
           fields: {
             title: data[this.spec.webhookFieldMapping.issueTitle],
             body: data[this.spec.webhookFieldMapping.issueBody],
