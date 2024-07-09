@@ -1,5 +1,7 @@
 const fsPromises = require("fs/promises");
 import { Item } from "../model/Item.js";
+import { CommentFields, CommentReferences } from "../model/comment.js";
+import { IssueFields } from "../model/issue.js";
 
 const CLIENT_DATA_ROOT = 'data/client';
 
@@ -15,8 +17,18 @@ export type FetchedItem = {
   mintedIdentifier: string | null,
   hintedIdentifier: string | null,
   fields: object,
-  localReferences: object
+  localReferences: object,
 }
+
+export type FetchedComment = FetchedItem & {
+  fields: CommentFields,
+  localReferences: CommentReferences,
+}
+
+export type FetchedIssue = FetchedItem & {
+  fields: IssueFields,
+}
+
 
 export type ClientSpec = {
   name: string;
@@ -55,17 +67,17 @@ export abstract class FetchCachingClient extends Client {
       return `${this.getDirName()}/${type}.json`; 
     }
   }
-  async getItems(type: string, filter?: { issue: string }): Promise<any> {
+  async getItems(type: string, filter?: { issue: string }): Promise<FetchedItem[]> {
     // console.log('Client#getItems', type, filter);
-    let itemsResponse: object;
+    let itemsWireResponse: object;
     const filename = this.getFilename(type, filter);
     try {
       const buff = await fsPromises.readFile(filename);
-      itemsResponse = JSON.parse(buff.toString());
+      itemsWireResponse = JSON.parse(buff.toString());
       console.log(`Loaded ${filename}`);
     } catch {
       console.log(`Failed to load ${filename}, fetching over network`);
-      itemsResponse = await this.getItemsOverNetwork(type, filter);
+      itemsWireResponse = await this.getItemsOverNetwork(type, filter);
       const dirname = this.getDirName();
       try {
         await fsPromises.mkdir(dirname);
@@ -73,13 +85,13 @@ export abstract class FetchCachingClient extends Client {
       }
       await fsPromises.writeFile(
         filename,
-        JSON.stringify(itemsResponse, null, 2) + "\n"
+        JSON.stringify(itemsWireResponse, null, 2) + "\n"
       );
       console.log(`Saved ${filename}`);
     }
-    return this.translateItemsResponse(itemsResponse, type);
+    return this.translateItemsWireResponse(itemsWireResponse, type);
   }
-  abstract translateItemsResponse(itemsResponse: object, type: string): FetchedItem[];
+  abstract translateItemsWireResponse(itemsResponse: object, type: string): FetchedItem[];
   abstract getItemsOverNetwork(type: string, filter?: { issue: string }): Promise<object>;
 
   ensureOriHint(body: string, ori: string) {

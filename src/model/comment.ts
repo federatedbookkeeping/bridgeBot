@@ -1,11 +1,12 @@
 import { Item } from "./Item";
 
-export class CommentReferences {
+export type CommentFields = {
+  body: string;
+}
+export type CommentReferences = {
     issue: string;
 }
-export class Comment extends Item {
-  fields: {
-    body: string;
-  }
+export type Comment = Item & {
+  fields: CommentFields
   references: CommentReferences
 }

@@ -1,6 +1,6 @@
 import { Item } from "./Item";
 
-export class Worked extends Item {
+export type Worked = Item & {
   fields: {
     task: string;
     description: string;

@@ -1,9 +1,11 @@
 import { Item } from "./Item";
 
-export class Issue extends Item {
-  fields: {
+export type IssueFields = {
     title: string;
     body: string;
     completed: boolean;
-  }
+};
+
+export type Issue = Item & {
+  fields: IssueFields
 }

@@ -205,13 +205,13 @@ export class TikiClient extends FetchCachingClient {
     }
     throw new Error('cannot translate');
   }
-  translateItemsResponse(itemsResponse: object, type: string): FetchedItem[] {
+  translateItemsWireResponse(itemsWireResponse: object, type: string): FetchedItem[] {
     switch (type) {
       case 'issue':
-        const issuesResponse = itemsResponse as { result: object[] };
+        const issuesResponse = itemsWireResponse as { result: object[] };
         return issuesResponse.result.map(item => this.translateFetchedItem(item, type));
       case 'comment':
-        const commentsResponse = itemsResponse as { comments: object[] };
+        const commentsResponse = itemsWireResponse as { comments: object[] };
         return commentsResponse.comments.map(item => this.translateFetchedItem(item, type));
       default:
         throw new Error(`Cannot translate items response of type ${type}`);

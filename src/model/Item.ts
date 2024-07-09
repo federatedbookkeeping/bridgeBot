@@ -1,4 +1,4 @@
-export class Item {
+export type Item = {
   type: string;
   identifier: string;
   deleted: boolean;

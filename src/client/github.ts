@@ -220,8 +220,8 @@ export class GitHubClient extends FetchCachingClient {
     }
     throw new Error("cannot translate");
   }
-  translateItemsResponse(itemsResponse: object[], type: string): FetchedItem[] {
-    return itemsResponse.map((item) => this.translateGhItem(item, type));
+  translateItemsWireResponse(itemsWireResponse: object[], type: string): FetchedItem[] {
+    return itemsWireResponse.map((item) => this.translateGhItem(item, type));
   }
 
   async getItemsOverNetwork(

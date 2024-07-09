@@ -1,6 +1,6 @@
 import { Item } from "./Item";
 
-export class User extends Item {
+export type User = Item & {
   fields: {
     name: string;
   }
