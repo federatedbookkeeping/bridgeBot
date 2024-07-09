@@ -12,7 +12,7 @@ npm run sync
 In a separate window:
 ```
 $ npm install -g localtunnel
-$ lt --port 8000 --subdomain quick-wolves-rescue
+$ while true; do lt --port 8000 --subdomain quick-wolves-rescue; sleep 2; done
 your url is: https://grumpy-cobras-sniff.loca.lt
 ```
 And then on configure webhooks `https://grumpy-cobras-sniff.loca.lt/{type}/{name}` to match your config.json

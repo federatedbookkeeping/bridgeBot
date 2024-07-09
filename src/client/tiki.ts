@@ -65,11 +65,13 @@ export class TikiClient extends FetchCachingClient {
       delete: WebhookEventType.Deleted
     }
     // throw new Error('Implement me!');
+    const itemUriParts = data['URI'].split('/');
+    const localIdentifier = itemUriParts[itemUriParts.length -1];
     const ret = {
       type: operationMap[urlParts[1]],
       item: {
-        type: urlParts[0],
-        localIdentifier: data['Item ID'],
+        type: (urlParts[0] === 'comment' ? 'comment' : 'issue'),
+        localIdentifier,
         hintedIdentifier: data['URI'],
         mintedIdentifier: null,
         fields: {
