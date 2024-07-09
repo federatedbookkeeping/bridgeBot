@@ -2,13 +2,13 @@ const fsPromises = require("fs/promises");
 import { GitHubClient } from "./client/github.js";
 import { TikiClient } from "./client/tiki.js";
 import { Client, FetchedComment, FetchedIssue, FetchedItem } from "./client/client.js";
-const { createServer } = require("http");
+const { createServer, Server } = require("http");
 
 const port = process.env.PORT || 8000;
 const CONFIG_FILE = 'config.json';
 
-function runWebhook(cb: (url: string, body: string) => void) {
-  createServer((req, res) => {
+function runWebhook(cb: (url: string, body: string) => void): typeof Server {
+  const server = createServer((req, res) => {
     // console.log("processing", req.url, req.method, JSON.stringify(req.headers));
     let body = "";
     req.on("data", function (data) {
@@ -26,6 +26,7 @@ function runWebhook(cb: (url: string, body: string) => void) {
     });
   }).listen(port);
   console.log("listening on port", port);
+  return server;
 }
 
 async function buildClients(configFile: string): Promise<Client[]> {
@@ -76,7 +77,7 @@ async function run() {
   const clients = await buildClients(CONFIG_FILE);
   const timestamps: { [index: number]: number } = {};
   const callbacks: { [index: number]: (value: unknown) => void } = {};
-  runWebhook((url: string, body: string) => {
+  const server = runWebhook((url: string, body: string) => {
     try {
       const data = JSON.parse(body);
       body = JSON.stringify(data, null, 2);
@@ -127,10 +128,13 @@ async function run() {
         references: {}
       });
       const loopback = await new Promise(cb => { callbacks[`issue-identifier-${i}-${timestamps[i]}`] = cb; });
-      console.log('created', local, loopback);
+      // console.log('created', local, loopback);
     }
   }
-  console.log('Checks completed');
+  console.log('Checks completed, closing webhook server...');
+  server.closeAllConnections();
+  server.close();
+  console.log('Done');
 }
 
 // ...
