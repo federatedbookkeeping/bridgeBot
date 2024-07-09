@@ -75,8 +75,8 @@ export class TikiClient extends FetchCachingClient {
         hintedIdentifier: data['URI'],
         mintedIdentifier: null,
         fields: {
-          title: data['Summary'],
-          body: data['Job'],
+          title: data['summary'],
+          body: data['description'],
           completed: false,
         },
         localReferences: {}
