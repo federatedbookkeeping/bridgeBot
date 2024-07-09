@@ -245,10 +245,10 @@ export class TikiClient extends FetchCachingClient {
           user: this.spec.defaultUser,
           body
         });
+        console.log('Sent', body, 'To', url, 'Received', response);
         if ([400, 404, 409].indexOf(response.code) !== -1) {
           throw new Error(`${response.code} response from the Tiki API`);
         }
-        console.log('Sent', body, 'To', url, 'Received', response);
         return response.itemId;
       }
       case 'comment': {
