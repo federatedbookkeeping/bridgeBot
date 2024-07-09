@@ -53,12 +53,16 @@ export class LriMap {
   addMapping(identifiers: { local: string; original: string }) {
     const { local, original } = identifiers;
     if (typeof this.map.toLocal[original] !== "undefined") {
-      console.log(this.map);
-      throw new Error("mapping already exists!");
+      if (this.map.toLocal[original] !== local) {
+        console.log(this.map, local, original);
+        throw new Error("mapping already exists and toLocal[original] doesn't match local!");
+      }
     }
     if (typeof this.map.toOriginal[local] !== "undefined") {
-      console.log(this.map);
-      throw new Error("mapping already exists!");
+      if (this.map.toOriginal[local] !== original) {
+        console.log(this.map, local, original);
+        throw new Error("mapping already exists and toOriginal[local] doesn't match original!");
+      }
     }
     this.map.toLocal[original] = local;
     this.map.toOriginal[local] = original;
