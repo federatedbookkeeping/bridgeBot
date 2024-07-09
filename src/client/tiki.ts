@@ -121,7 +121,7 @@ export class TikiClient extends FetchCachingClient {
     if (ret.item.hintedIdentifier === '') {
       ret.item.hintedIdentifier = null;
     }
-  console.log('Tiki Client parsed webhook', ret);
+    console.log('Tiki Client parsed webhook', ret);
     return ret;
   }
 
@@ -163,11 +163,17 @@ export class TikiClient extends FetchCachingClient {
       case 'issue': {
         const ttItem = item as TikiIssue;
         console.log("extracting identifiers and fields from ttItem", ttItem);
-        return {
+        const localIdentifier = ttItem.itemId.toString();
+        const mintedIdentifier = this.mintOri('issue', localIdentifier);
+        let hintedIdentifier = ttItem.fields[`${this.spec.fieldPrefix}URI`];
+        if (hintedIdentifier === '') {
+          hintedIdentifier = null;
+        }
+        const ret = {
           type: 'issue',
-          localIdentifier: ttItem.itemId.toString(),
-          mintedIdentifier: ttItem.fields[`${this.spec.fieldPrefix}URI`],
-          hintedIdentifier: ttItem.fields[`${this.spec.fieldPrefix}URI`],
+          localIdentifier,
+          mintedIdentifier,
+          hintedIdentifier,
           fields: {
             title: ttItem.fields[`${this.spec.fieldPrefix}Summary`],
             body: ttItem.fields[`${this.spec.fieldPrefix}Description`],
