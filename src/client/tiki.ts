@@ -71,7 +71,7 @@ export class TikiClient extends FetchCachingClient {
       update: WebhookEventType.Updated,
       delete: WebhookEventType.Deleted
     }
-    console.log('Tiki Client parsing webhook', data, urlParts);
+    console.log('Tiki Client parsing webhook', data, urlParts, this.spec.webhookFieldMapping);
     let ret;
     if (urlParts[0] === 'comment') {
       ret = {

@@ -25,10 +25,12 @@ export function runWebhook(bridges: Bridge[]) {
         console.log("Body", body);
         const parts = req.url.split('/');
         if (parts.length >= 3) {
+          let found = false;
           for (let i=0; i < bridges.length; i++) {
             // console.log('for loop i', i, parts, bridges[i].getType(), bridges[i].getName());
             if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
               console.log('bridge found!', parts[1], parts[2]);
+              found = true;
               const parsed = bridges[i].processWebhook(data, parts.slice(3));
               switch (parsed.type) {
                 case WebhookEventType.Created: {
@@ -52,6 +54,11 @@ export function runWebhook(bridges: Bridge[]) {
               }
             }
           }
+          if (!found) {
+            console.log('No tracker with matching name and type found in config', parts);
+          }
+        } else {
+          console.log('Ignoring webhook call with less than 3 URl parts', parts);
         }
       } catch (e) {
         console.error('error while processing webhook!');
