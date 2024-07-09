@@ -41,6 +41,14 @@ export type TikiClientSpec = {
     Description: number,
     Job: number,
     URI: number,
+  },
+  webhookFieldMapping: {
+    issueTitle: string,
+    issueBody: string,
+    issueUri: string,
+    commentBody: string,
+    commentId: string,
+    commentIssueId: string,
   }
   defaultUser: string;
   server: string;
@@ -58,30 +66,48 @@ export class TikiClient extends FetchCachingClient {
     return 'tiki';
   }
   parseWebhookData(data: object, urlParts: string[]): { type: WebhookEventType, item: FetchedItem } {
-    console.log('Tiki Client parsing webhook', data, urlParts);
     const operationMap = {
       create: WebhookEventType.Created,
       update: WebhookEventType.Updated,
       delete: WebhookEventType.Deleted
     }
-    // throw new Error('Implement me!');
-    const itemUriParts = data['URI'].split('/');
-    const localIdentifier = itemUriParts[itemUriParts.length -1];
-    const ret = {
-      type: operationMap[urlParts[1]],
-      item: {
-        type: (urlParts[0] === 'comment' ? 'comment' : 'issue'),
-        localIdentifier,
-        hintedIdentifier: data['URI'],
-        mintedIdentifier: null,
-        fields: {
-          title: data['summary'],
-          body: data['description'],
-          completed: false,
-        },
-        localReferences: {}
-      } as FetchedItem
-    };
+    console.log('Tiki Client parsing webhook', data, urlParts);
+    let ret;
+    if (urlParts[0] === 'comment') {
+      ret = {
+        type: operationMap[urlParts[1]],
+        item: {
+          type: 'comment',
+          localIdentifier: (data as { message_id: string }).message_id,
+          hintedIdentifier: (data as { message_id: string }).message_id,
+          mintedIdentifier: null,
+          fields: {
+            body: (data as { content: string }).content,
+          },
+          localReferences: {
+            issue: (data as { object: string }).object,
+          }
+        } as FetchedItem
+      };
+    } else { 
+      const itemUriParts = data[this.spec.webhookFieldMapping.issueUri].split('/');
+      ret = {
+        type: operationMap[urlParts[1]],
+        item: {
+          type: 'issue',
+          localIdentifier: itemUriParts[itemUriParts.length -1],
+          hintedIdentifier: data[this.spec.webhookFieldMapping.issueUri],
+          mintedIdentifier: null,
+          fields: {
+            title: data[this.spec.webhookFieldMapping.issueTitle],
+            body: data[this.spec.webhookFieldMapping.issueBody],
+            completed: false,
+          },
+          localReferences: {}
+        } as FetchedItem
+      };
+
+    }
     console.log('Tiki Client parsed webhook', ret);
     return ret;
   }
@@ -225,10 +251,13 @@ export class TikiClient extends FetchCachingClient {
           body
         });
         console.log(response);
-        if ([404, 409].indexOf(response.code) !== -1) {
+        if ([404, 409, 1000].indexOf(response.code) !== -1) {
           throw new Error(`${response.code} response from the Tiki API`);
         }
         console.log('Sent', body, 'To', url, 'Received', response);
+        if (typeof response.threadId === 'undefined') {
+          throw new Error('Could not extract local identifier from create response!');
+        }
         return response.threadId;
       }
       default:

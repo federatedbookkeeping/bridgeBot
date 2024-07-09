@@ -26,32 +26,32 @@ export function runWebhook(bridges: Bridge[]) {
         const parts = req.url.split('/');
         if (parts.length >= 3) {
           for (let i=0; i < bridges.length; i++) {
-            console.log('for loop i', i, parts, bridges[i].getType(), bridges[i].getName());
-              if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
-                console.log('bridge found!', parts[1], parts[2]);
-                const parsed = bridges[i].processWebhook(data, parts.slice(3));
-                switch (parsed.type) {
-                  case WebhookEventType.Created: {
-                    console.log('webhook event parsed as creation', parsed.item);
-                    for (let j=0; j < bridges.length; j++) {
-                      console.log('for loop i j', i, j);
-                      if (j !== i) {
-                        console.log(`pushing creation from ${bridges[i].getName()} to ${bridges[j].getName()}`);
-                        promises.push(bridges[j].pushItem(parsed.item));
-                      }
+            // console.log('for loop i', i, parts, bridges[i].getType(), bridges[i].getName());
+            if (parts[0] === '' && parts[1] === bridges[i].getType() && parts[2] === bridges[i].getName()) {
+              console.log('bridge found!', parts[1], parts[2]);
+              const parsed = bridges[i].processWebhook(data, parts.slice(3));
+              switch (parsed.type) {
+                case WebhookEventType.Created: {
+                  console.log('webhook event parsed as creation', parsed.item);
+                  for (let j=0; j < bridges.length; j++) {
+                    console.log('for loop i j', i, j);
+                    if (j !== i) {
+                      console.log(`pushing creation from ${bridges[i].getName()} to ${bridges[j].getName()}`);
+                      promises.push(bridges[j].pushItem(parsed.item));
                     }
                   }
-                  break;
-                  case WebhookEventType.Updated: {
-                    console.log('webhook event parsed as update', parsed.item);
-                  }
-                  break;
-                  case WebhookEventType.Deleted: {
-                    console.log('webhook event parsed as deletion', parsed.item);
-                  }
+                }
+                break;
+                case WebhookEventType.Updated: {
+                  console.log('webhook event parsed as update', parsed.item);
+                }
+                break;
+                case WebhookEventType.Deleted: {
+                  console.log('webhook event parsed as deletion', parsed.item);
                 }
               }
             }
+          }
         }
       } catch (e) {
         console.error('error while processing webhook!');
