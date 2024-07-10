@@ -122,7 +122,7 @@ export class TikiClient extends FetchCachingClient {
     if (ret.item.hintedIdentifier === '') {
       ret.item.hintedIdentifier = null;
     }
-    console.log('Tiki Client parsed webhook', data, ret);
+    // console.log('Tiki Client parsed webhook', data, ret);
     return ret;
   }
 

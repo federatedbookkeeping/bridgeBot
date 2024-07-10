@@ -1,11 +1,13 @@
 const fsPromises = require("fs/promises");
 import { GitHubClient } from "./client/github.js";
 import { TikiClient } from "./client/tiki.js";
-import { Client, FetchedComment, FetchedIssue, FetchedItem } from "./client/client.js";
+import { Client, FetchedComment, FetchedIssue, FetchedItem, WebhookEventType } from "./client/client.js";
 const { createServer, Server } = require("http");
 
 const port = process.env.PORT || 8000;
 const CONFIG_FILE = 'config.json';
+
+const webhookCallbacks: { [index: number]: (value: unknown) => void } = {};
 
 function runWebhook(cb: (url: string, body: string) => void): typeof Server {
   const server = createServer((req, res) => {
@@ -72,15 +74,103 @@ function checkFetchedItem(declaredType: string, fetchedItem: FetchedItem) {
     if (typeof fetchedComment.localReferences.issue !== 'string') { console.error('comment has no reference to issue', fetchedItem); }
   }
 }
+
+const actions: { [index: string]: (client: Client, i: number, timestamp: number) => Promise<{
+  type: WebhookEventType;
+  item: FetchedItem;
+}>} = {
+  create: async function (client: Client, i: number, timestamp: number) {
+    const fields = {
+      title: `issue-title-${i}-${timestamp}`,
+      body: `issue-body-${i}-${timestamp}`,
+      completed: false
+    };
+    const localReferences = {};
+    const localIdentifier = await client.createItem({
+      type: 'issue',
+      identifier: `issue-identifier-${i}-${timestamp}`,
+      deleted: false,
+      fields,
+      references: localReferences,
+    });
+    return {
+      type: WebhookEventType.Created,
+      item: {
+        type: 'issue',
+        localIdentifier,
+        mintedIdentifier: null,
+        hintedIdentifier: null,
+        fields,
+        localReferences
+      } as FetchedItem
+    }
+  },
+  update: async function (client: Client, i: number, timestamp: number) {
+    const localIdentifier = '';
+    const localReferences = {};
+    const fields = {
+      title: `updated-title-${i}-${timestamp}`,
+      body: `issue-body-${i}-${timestamp}`,
+      completed: false
+    };
+    await client.updateItem('issue', `issue-identifier-${i}-${timestamp}`, fields, localReferences);
+    return {
+      type: WebhookEventType.Created,
+      item: {
+        type: 'issue',
+        localIdentifier,
+        mintedIdentifier: null,
+        hintedIdentifier: null,
+        fields: {},
+        localReferences: {}
+      } as FetchedItem
+    }
+  },
+  delete: async function (client: Client, i: number, timestamp: number) {
+    await client.deleteItem('issue', `issue-identifier-${i}-${timestamp}`);
+    return {
+      type: WebhookEventType.Created,
+      item: {
+        type: 'issue',
+        localIdentifier: '',
+        mintedIdentifier: null,
+        hintedIdentifier: null,
+        fields: {},
+        localReferences: {}
+      } as FetchedItem
+    }
+  },
+}
+async function check(action: string, client: Client, i: number, timestamp: number) {
+  const issueId = `issue-identifier-${i}-${timestamp}`;
+  const webhookCallbackPromise: Promise<{
+    type: WebhookEventType;
+    item: FetchedItem;
+  }> = new Promise(cb => {
+    console.log('start', action, issueId);
+    webhookCallbacks[`${WebhookEventType.Created}-${issueId}`] = cb;
+  });
+  const sent: {
+    type: WebhookEventType;
+    item: FetchedItem;
+  } = await actions[action](client, i, timestamp);
+  const received: {
+    type: WebhookEventType;
+    item: FetchedItem;
+  } = await webhookCallbackPromise;
+  if (sent.type !== received.type) { console.log('operation type mismatch'); }
+
+  console.log('ended', action, issueId);
+}
+
 async function run() {
   console.log('starting');
   const clients = await buildClients(CONFIG_FILE);
-  const callbacks: { [index: number]: (value: unknown) => void } = {};
   const server = runWebhook((url: string, body: string) => {
     try {
       const data = JSON.parse(body);
       body = JSON.stringify(data, null, 2);
-      // console.log("Body", body);
+      console.log("Body", body);
       const parts = url.split('/');
       if (parts.length >= 3) {
         let found = false;
@@ -91,10 +181,10 @@ async function run() {
             const parsed = clients[i].parseWebhookData(data, parts.slice(3));
             if (parsed.item.hintedIdentifier === null) {
               console.log('parsed item hinted identifier is null in webhook callback', parsed);
-            } else if (typeof callbacks[parsed.item.hintedIdentifier] === 'function') {
-              callbacks[parsed.item.hintedIdentifier](parsed);
+            } else if (typeof webhookCallbacks[`${parsed.type}-${parsed.item.hintedIdentifier}`] === 'function') {
+              webhookCallbacks[`${parsed.type}-${parsed.item.hintedIdentifier}`](parsed);
             } else {
-              console.error('unexpected item in webhook', parsed, Object.keys(callbacks), parsed.item.hintedIdentifier, typeof callbacks[parsed.item.hintedIdentifier]);
+              console.error('unexpected item in webhook', parsed, Object.keys(webhookCallbacks), `${parsed.type}-${parsed.item.hintedIdentifier}`, typeof webhookCallbacks[`${parsed.type}-${parsed.item.hintedIdentifier}`]);
             }
             // console.log(parsed);
           }
@@ -115,26 +205,9 @@ async function run() {
         checkFetchedItem('comment', comments[j]);
       }
       const timestamp = Date.now();
-      const issueId = `issue-identifier-${i}-${timestamp}`;
-      const title = `issue-title-${i}-${timestamp}`;
-      const body = `issue-body-${i}-${timestamp}`;
-      const promise = new Promise(cb => {
-        console.log('waiting for webhook', issueId);
-        callbacks[issueId] = cb;
-      });
-      const local = await clients[i].createItem({
-        type: 'issue',
-        identifier: issueId,
-        deleted: false,
-        fields: {
-          title,
-          body,
-          completed: false
-        },
-        references: {}
-      });
-      const loopback = await promise;
-      console.log('webhook received', local, loopback);
+      await check('create', clients[i], i, timestamp);
+      // await check('update', clients[i], i, timestamp);
+      // await check('delete', clients[i], i, timestamp);
     }
   }
   console.log('Checks completed, closing webhook server...');
