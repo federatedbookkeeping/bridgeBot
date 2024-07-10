@@ -6,7 +6,8 @@ const { createServer } = require("http");
 const port = process.env.PORT || 8000;
 export function runWebhook(bridges: Bridge[]) {
   createServer((req, res) => {
-    console.log("processing", req.url, req.method, JSON.stringify(req.headers, null, 2));
+    // console.log("processing", req.url, req.method, JSON.stringify(req.headers, null, 2));
+    console.log("processing", req.url, req.method);
     let body = "";
     req.on("data", function (data) {
       body += data;
@@ -22,7 +23,7 @@ export function runWebhook(bridges: Bridge[]) {
       try {
         const data = JSON.parse(body);
         body = JSON.stringify(data, null, 2);
-        console.log("Body", body);
+        // console.log("Body", body);
         const parts = req.url.split('/');
         if (parts.length >= 3) {
           let found = false;
