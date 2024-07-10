@@ -6,7 +6,7 @@ const { createServer } = require("http");
 const port = process.env.PORT || 8000;
 export function runWebhook(bridges: Bridge[]) {
   createServer((req, res) => {
-    console.log("processing", req.url, req.method, JSON.stringify(req.headers));
+    console.log("processing", req.url, req.method, JSON.stringify(req.headers, null, 2));
     let body = "";
     req.on("data", function (data) {
       body += data;

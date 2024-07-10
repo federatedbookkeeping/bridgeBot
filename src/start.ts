@@ -14,7 +14,7 @@ function runWebhook() {
       }
     });
     req.on("end", async function () {
-      console.log(req.url, body);
+      console.log(req.url, JSON.stringify(JSON.parse(body), null, 2);
       res.end('{ "happy": true }\n');
     });
   }).listen(port);
