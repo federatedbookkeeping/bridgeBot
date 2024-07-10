@@ -70,7 +70,7 @@ async function run() {
     for (let i = 0; i < bridges.length; i++) {
       await bridges[i].save();
     }
-  }, 1000);
+  }, 10000);
 }
 
 // ...
