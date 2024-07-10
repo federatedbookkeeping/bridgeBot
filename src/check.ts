@@ -119,7 +119,7 @@ async function run() {
       const title = `issue-title-${i}-${timestamp}`;
       const body = `issue-body-${i}-${timestamp}`;
       const promise = new Promise(cb => {
-        console.log('waiting for webhook', issueId, local);
+        console.log('waiting for webhook', issueId);
         callbacks[issueId] = cb;
       });
       const local = await clients[i].createItem({
