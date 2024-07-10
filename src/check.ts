@@ -75,7 +75,6 @@ function checkFetchedItem(declaredType: string, fetchedItem: FetchedItem) {
 async function run() {
   console.log('starting');
   const clients = await buildClients(CONFIG_FILE);
-  const timestamps: { [index: number]: number } = {};
   const callbacks: { [index: number]: (value: unknown) => void } = {};
   const server = runWebhook((url: string, body: string) => {
     try {
@@ -115,20 +114,27 @@ async function run() {
       for (let j = 0; j < comments.length; j++) {
         checkFetchedItem('comment', comments[j]);
       }
-      timestamps[i] = Date.now();
+      const timestamp = Date.now();
+      const issueId = `issue-identifier-${i}-${timestamp}`;
+      const title = `issue-title-${i}-${timestamp}`;
+      const body = `issue-body-${i}-${timestamp}`;
+      const promise = new Promise(cb => {
+        console.log('waiting for webhook', issueId, local);
+        callbacks[issueId] = cb;
+      });
       const local = await clients[i].createItem({
         type: 'issue',
-        identifier: `issue-identifier-${i}-${timestamps[i]}`,
+        identifier: issueId,
         deleted: false,
         fields: {
-          title: `issue-title-${i}-${timestamps[i]}`,
-          body: `issue-body-${i}-${timestamps[i]}`,
+          title,
+          body,
           completed: false
         },
         references: {}
       });
-      const loopback = await new Promise(cb => { callbacks[`issue-identifier-${i}-${timestamps[i]}`] = cb; });
-      // console.log('created', local, loopback);
+      const loopback = await promise;
+      console.log('webhook received', local, loopback);
     }
   }
   console.log('Checks completed, closing webhook server...');
