@@ -110,10 +110,22 @@ the webhook.
 It also took a while to figure out that you can pass a `--subdomain` flag to localtunnel, and that you need to restart it after failure.
 Having it running in a loop and with that flag eliminated a hard-to-debug cause of errors, and gave us a development speed-up.
 
+### Pending mappings
+While creating a copy in one Tiki, before that creation is completed, a webhook event is triggered for that copy creation.
+If the other Tiki picks that up before its own creation is completed, two copy creations will happen in parallel. We added pending mappings
+to prevent this.
 
-## Work Report
+This is a good example however of "sync is hard", and it deserves a robust reusable implementation of ORI-aware synced data. I'm not sure
+if existing CRDTs could cover this need, stuff for further research.
+
+### ORIs vs real-world deduplication
+We started this project with the plan to deduplicate on the real world.
+Instead, we built a system that deduplicates on the books of original entry.
+We probably need a system that can support both models.
+
+## Hours Worked
 This repository is the end-deliverable of milestone 3e of the NLnet-funded "Federated Task Tracking with Live Data" project and together
-with the earlier cambria-dxos-based experiment preceding this one, encompassed 60 hours worked by Michiel de Jong.
+with the earlier cambria-dxos-based experiment preceding this one, encompassed 60 hours worked by Michiel de Jong (at 50 euros per hour).
 
 This work was done in close collaboration with Victor Emanouilev, who was working on the Tiki side, and will separately claim his hours
 worked under milestone 3a of the same project.
