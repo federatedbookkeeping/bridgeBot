@@ -64,6 +64,13 @@ async function run() {
   console.log('Webhook running');
   await load(dataStore, bridges);
   await initialSync(dataStore, bridges);
+  setInterval(async () => {
+    console.log('persisting sync state to disk');
+    await dataStore.save();
+    for (let i = 0; i < bridges.length; i++) {
+      await bridges[i].save();
+    }
+  }, 1000);
 }
 
 // ...

@@ -244,9 +244,9 @@ export class GitHubClient extends FetchCachingClient {
       method: "POST",
       body: JSON.stringify(data, null, 2),
     };
-    const response = (await this.apiCall(args)) as { id: number };
-    // console.log("remoteCreate response", response);
-    return response.id.toString();
+    const response = (await this.apiCall(args)) as { url: string };
+    console.log("remoteCreate response", response);
+    return response.url;
   }
 
   async createItem(item: Item): Promise<string> {
