@@ -110,10 +110,13 @@ export class Bridge {
       // TODO: sanity check: if we detect the ORI matches the schema for this tracker,
       // then arriving here would mean something is wrong.
       console.log(`pushing issue to ${this.client.getName()}`, issue);
+
+      this.lriMap.issue.addPendingMapping(issue.identifier);
       const local = await this.client.createItem(issue);
       console.log("issue created, adding mapping", local, issue.identifier);
       // TODO: sanity check: if there is already a mapping for local identifier
       // `local` in the LRI map, then that would mean something is wrong.
+      this.lriMap.issue.removePendingMapping(issue.identifier);
       this.lriMap.issue.addMapping({ local, original: issue.identifier });
     } else {
       console.log(

@@ -67,6 +67,21 @@ export class LriMap {
     this.map.toLocal[original] = local;
     this.map.toOriginal[local] = original;
   }
+  addPendingMapping(original: string) {
+    if (typeof this.map.toLocal[original] !== 'undefined') {
+      console.error('not undefined', original);
+    } else {
+      this.map.toLocal[original] = 'pending';
+    }
+    this.map.toLocal[original] = 'pending';
+  }
+  removePendingMapping(original: string) {
+    if (this.map.toLocal[original] !== 'pending') {
+      console.error('not pending', original);
+    } else {
+      delete this.map.toLocal[original];
+    }
+  }
   async load() {
     try {
       const buff = await fsPromises.readFile(this.filename);
